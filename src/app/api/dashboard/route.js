@@ -18,7 +18,7 @@ export async function GET(request) {
     ),
     query(
       `SELECT i.id AS item_id, i.name, i.price, i.expire_at, i.image,
-              c.name AS category_name
+              i.category_id, c.name AS category_name
        FROM items i JOIN categories c ON i.category_id = c.id
        WHERE i.user_id = ? AND i.status = 'waiting' AND i.expire_at >= NOW()
        ORDER BY i.expire_at ASC LIMIT 3`,
