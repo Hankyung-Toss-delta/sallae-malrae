@@ -1,4 +1,4 @@
-import mariadb from 'mariadb';
+import * as mariadb from 'mariadb';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL 환경변수가 설정되지 않았습니다.');

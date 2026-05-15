@@ -22,6 +22,7 @@ CREATE TABLE users (
   created_at    DATETIME           NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_email       (email),
+  UNIQUE KEY uk_users_nickname    (nickname),
   UNIQUE KEY uk_users_share_token (share_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
