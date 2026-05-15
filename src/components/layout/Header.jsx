@@ -28,14 +28,16 @@ export default function Header({
     (!isAuthPage ? (
       <Link
         href="/auth/login"
-        className="rounded-xl border border-[#9AB79E] px-5 py-3 text-base font-semibold text-[#5D7A62] transition hover:bg-[#E8F1E9]"
+        className="rounded-xl border border-[#9AB79E] px-3 py-2 text-base font-semibold text-[#5D7A62] transition hover:bg-[#E8F1E9]"
       >
         로그아웃
       </Link>
     ) : null);
 
   return (
-    <header className={`fixed left-0 top-0 z-10 w-full px-10 py-2 ${className}`}>
+    <header
+      className={`fixed left-0 top-0 z-10 w-full px-10 py-2 ${className}`}
+    >
       <div className="flex items-center justify-between gap-8">
         <div className="flex items-center gap-8">
           <Link href={logoHref}>
