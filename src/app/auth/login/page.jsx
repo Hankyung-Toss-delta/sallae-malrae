@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import AuthCard from "@/components/auth/AuthCard";
 import Header from "@/components/layout/Header";
-import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 export default function LoginPage() {
