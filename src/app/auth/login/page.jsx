@@ -28,9 +28,16 @@ export default function LoginPage() {
           />
         </div>
 
-        <Button className="mt-8" fullWidth size="lg">
+        <Link
+          href="/dashboard"
+          className="
+    mt-8 inline-flex h-14 w-full cursor-pointer items-center justify-center rounded-[22px]
+    bg-[#8FA58D] px-6 text-base font-medium text-white transition-colors
+    hover:bg-[#81967F]
+  "
+        >
           로그인하기
-        </Button>
+        </Link>
 
         <div className="mt-5 mb-5 flex items-center justify-center gap-2 text-xs">
           <span className="text-gray-500">아직 회원이 아니신가요?</span>
