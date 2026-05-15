@@ -1,10 +1,9 @@
-import { writeFile } from 'fs/promises';
-import path from 'path';
-import { randomUUID } from 'crypto';
+import sharp from 'sharp';
 import { query } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 import { isPositiveInteger, isNonEmptyString } from '@/lib/validators';
+import { uploadImage } from '@/lib/gcs';
 
 // GET: status 파라미터로 WHERE 조건 + 정렬 결정. SQL 인젝션 방지용 whitelist.
 const VALID_STATUS = new Set(['all', 'WAITING', 'BOUGHT', 'PASSED', 'EXPIRED']);
@@ -103,7 +102,7 @@ function isValidExpireAt(str) {
   return d.getTime() >= now + 60 * 60 * 1000 && d.getTime() <= now + 30 * 24 * 60 * 60 * 1000;
 }
 
-const ALLOWED_IMG_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_IMG_SIZE = 5 * 1024 * 1024; // 5MB
 
 // POST /api/items — 새 항목 등록 (multipart/form-data)
@@ -143,15 +142,18 @@ export async function POST(request) {
   const cats = await query('SELECT id FROM categories WHERE id = ?', [categoryId]);
   if (cats.length === 0) return errorResponse('INVALID_CATEGORY');
 
-  // 이미지 저장 (/public/uploads)
+  // 이미지 — sharp 정규화 후 GCS 업로드
   let imagePath = null;
   if (imageFile && imageFile.size > 0) {
-    const ext = imageFile.name.split('.').pop().toLowerCase();
-    if (!ALLOWED_IMG_EXTS.has(ext) || imageFile.size > MAX_IMG_SIZE) return errorResponse('INVALID_IMAGE');
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const filename = `${randomUUID()}.${ext}`;
-    await writeFile(path.join(process.cwd(), 'public', 'uploads', filename), buffer);
-    imagePath = `/uploads/${filename}`;
+    if (!ALLOWED_MIME_TYPES.has(imageFile.type) || imageFile.size > MAX_IMG_SIZE) {
+      return errorResponse('INVALID_IMAGE');
+    }
+    const raw = Buffer.from(await imageFile.arrayBuffer());
+    const processed = await sharp(raw)
+      .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer();
+    imagePath = await uploadImage(processed);
   }
 
   const expireDate = new Date(expireAtStr);
