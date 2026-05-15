@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export const CATEGORY_LABELS = {
   1: "패션/잡화",
   2: "전자기기",
@@ -51,7 +53,7 @@ export function CoolingOffCard({ item, onClick }) {
 
           <div className="w-[90px] h-[90px] rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
             {image ? (
-              <img
+              <Image
                 src={image}
                 alt={name}
                 className="w-full h-full object-cover"
@@ -76,7 +78,7 @@ export function CoolingOffCard({ item, onClick }) {
       </div>
 
       <div className="border-t border-gray-100 px-4 py-2.5 flex items-center justify-between">
-        <p className="text-sm text-gray-500 truncate mr-4">"{memo}"</p>
+        <p className="text-sm text-gray-500 truncate mr-4">&quot;{memo}&quot;</p>
         <div className="flex items-center gap-1 flex-shrink-0">
           <span className="text-base">🔥</span>
           <span className="text-sm font-semibold text-gray-700">

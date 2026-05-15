@@ -1,4 +1,5 @@
 import { CATEGORY_LABELS, calcDaysLeft } from "@/components/ui/Card";
+import Image from 'next/image'
 
 export default function CoolingOffDetailPanel({
   item,
@@ -59,7 +60,7 @@ export default function CoolingOffDetailPanel({
                 <div className="flex flex-col gap-6">
                 <div className="w-full bg-white rounded-2xl overflow-hidden flex items-center justify-center" style={{ minHeight: 220 }}>
                   {item.image ? (
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-contain"
