@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const DEFAULT_NAV_ITEMS = [
   { key: "dashboard", href: "/dashboard", label: "대시보드" },
-  { key: "wishlist", href: "/wishlist", label: "위시리스트" },
+  { key: "coolingoff", href: "/coolingoff", label: "쿨링오프" },
 ];
 
 function getNavItemClassName(isActive) {
@@ -28,7 +28,7 @@ export default function Header({
     (!isAuthPage ? (
       <Link
         href="/auth/login"
-        className="rounded-xl border border-[#9AB79E] px-3 py-2 text-base font-semibold text-[#5D7A62] transition hover:bg-[#E8F1E9]"
+        className="text-base font-semibold text-[#5D7A62]"
       >
         로그아웃
       </Link>
