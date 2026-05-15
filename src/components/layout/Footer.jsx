@@ -12,7 +12,7 @@ export default function Footer({ className = "" }) {
           <h2 className="text-2xl font-semibold tracking-tight">살래말래</h2>
 
           <p className="mt-3 max-w-md text-sm leading-6 text-white/70">
-            소비를 기록하고, 위시리스트를 관리하며 더 나은 구매 결정을 돕는
+            소비를 기록하고, 위시리스트를 관리하며 더 나은 구매 결정을 돕는<br/>
             합리적 소비 습관 서비스입니다.
           </p>
         </div>
