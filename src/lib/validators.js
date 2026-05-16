@@ -8,7 +8,7 @@ export function isValidEmail(email) {
 
 // 비밀번호 최소 길이 — 8자 이상. PASSWORD_TOO_SHORT.
 export function isValidPasswordLength(password) {
-  return typeof password === 'string' && password.length >= 8;
+  return typeof password === 'string' && password.length >= 8 && password.length <= 100;
 }
 
 // 닉네임 길이 — 1~20자 (users.nickname VARCHAR(20) NOT NULL).
