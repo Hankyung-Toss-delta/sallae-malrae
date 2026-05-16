@@ -62,6 +62,6 @@ export async function GET(request) {
       expired_count: Number(expiredRows[0].expired_count),
       categoryChart,
     },
-    '대시보드를 불러왔습니다.',
+    'Dashboard retrieved.',
   );
 }
