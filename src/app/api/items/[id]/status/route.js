@@ -65,7 +65,7 @@ export async function PATCH(request, { params }) {
             levelUp: false,
           },
         },
-        dbStatus === ITEM_STATUS.PASSED ? '아낌으로 결정했습니다.' : '구매함으로 결정했습니다.',
+        'Decision saved.',
       );
     }
 
@@ -132,7 +132,7 @@ export async function PATCH(request, { params }) {
           levelUp: newLevel > oldLevel,
         },
       },
-      dbStatus === ITEM_STATUS.PASSED ? '아낌으로 결정했습니다.' : '구매함으로 결정했습니다.',
+      'Decision saved.',
     );
   } catch (err) {
     await conn.rollback();

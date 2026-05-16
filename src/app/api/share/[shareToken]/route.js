@@ -51,6 +51,6 @@ export async function GET(request, { params }) {
       summary: { passed_count: passedCount, saved_amount: savedAmount, success_rate: successRate },
       categoryChart,
     },
-    '공유 페이지를 불러왔습니다.',
+    'Share page retrieved.',
   );
 }

@@ -17,6 +17,6 @@ export async function POST(request) {
       shareToken,
       shareUrl: `${baseUrl}/share/${shareToken}`,
     },
-    '공유 링크가 생성되었습니다.',
+    'Share token generated.',
   );
 }
