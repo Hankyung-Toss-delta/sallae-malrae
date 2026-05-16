@@ -2,6 +2,7 @@
   "name": "sallae-malrae",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +15,6 @@
     "jsonwebtoken": "^9.0.3",
     "mariadb": "^3.5.2",
     "next": "16.2.6",
-    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
