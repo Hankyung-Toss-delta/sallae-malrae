@@ -85,7 +85,7 @@ CREATE TABLE email_logs (
   error_msg    VARCHAR(500)                     NULL,
   attempted_at DATETIME                         NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_email_logs_item_id FOREIGN KEY (item_id) REFERENCES items(id),
+  CONSTRAINT fk_email_logs_item_id FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
   UNIQUE KEY uk_email_logs_item_type (item_id, type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
