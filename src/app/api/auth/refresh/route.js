@@ -48,11 +48,20 @@ export async function POST(request) {
     [hashedRt, newVersion, user.id],
   );
 
-  const response = successResponse({ accessToken }, 'Token refreshed.');
+  const response = successResponse(null, 'Token refreshed.');
+
+  response.cookies.set('accessToken', accessToken, {
+    httpOnly: true,
+    maxAge: 15 * 60,
+    path: '/',
+    sameSite: 'strict',
+  });
+
   response.cookies.set('refreshToken', refreshToken, {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60,
     path: '/',
+    sameSite: 'strict',
   });
 
   return response;
