@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -11,12 +11,19 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
+function SignupSuccessBanner() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("signup") !== "success") return null;
+  return (
+    <p className="mb-4 text-sm text-[#5D7A62]" role="status">
+      회원가입이 완료되었어요. 로그인해주세요.
+    </p>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
-
-  const justSignedUp = searchParams.get("signup") === "success";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,11 +76,9 @@ export default function LoginPage() {
           당신의 지갑을 지키는 든든한 습관, 살래말래입니다.
         </p>
 
-        {justSignedUp && (
-          <p className="mb-4 text-sm text-[#5D7A62]" role="status">
-            회원가입이 완료되었어요. 로그인해주세요.
-          </p>
-        )}
+        <Suspense fallback={null}>
+          <SignupSuccessBanner />
+        </Suspense>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="flex flex-col gap-4">
