@@ -1,39 +1,50 @@
-export default function StepCard({ step, title, subtitle, description, isActive }) {
+import Image from "next/image";
+
+export default function StepCard({ step, title, subtitle, description, isActive, imageSrc, imageStyle }) {
   const bg = isActive
-    ? "bg-[#3a3a3a] text-white"
+    ? "bg-[#89928f] text-white"
     : step === 1
-    ? "bg-[#c8e6c9] text-[#3a3a3a]"
-    : "bg-[#f0f0f0] text-[#3a3a3a]";
+    ? "bg-[#c4debe] text-[#3a3a3a]"
+    : "bg-[#e9f0e9] text-[#3a3a3a]";
 
   return (
     <div
-      className={`rounded-3xl px-6 py-7 flex flex-col shadow-lg ${bg} ${
-        isActive ? "w-44" : "w-40"
-      }`}
-      style={{ minHeight: "260px" }}
+      className={`rounded-3xl relative flex flex-col justify-end shadow-lg overflow-hidden ${bg}`}
+      style={{ width: "360px", height: "440px" }}
     >
-      <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mb-4 ${
-          isActive
-            ? "bg-white/20 text-white"
-            : "bg-white text-[#3a3a3a] shadow-sm"
-        }`}
-      >
-        0{step}
-      </div>
-      <div>
-        <p className="font-bold text-xl leading-tight">{title}</p>
-        <p className={`text-sm mt-0.5 ${isActive ? "text-[#7aaa8a]" : "text-gray-400"}`}>
-          {subtitle}
+      {/* 이미지 — imageStyle로 위치/크기 자유 조절 */}
+      {imageSrc && (
+        <div className="absolute" style={imageStyle}>
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </div>
+      )}
+
+      {/* 텍스트 영역 — 이미지 위에 */}
+      <div className="relative z-10 px-8 pb-8">
+        <div
+          className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold mb-4 ${
+            isActive ? "bg-white/20 text-white" : "bg-white text-[#3a3a3a] shadow-sm"
+          }`}
+        >
+          0{step}
+        </div>
+
+        <div className="flex items-baseline gap-2 mb-2">
+          <p className="font-bold text-3xl leading-tight">{title}</p>
+          <p className={`text-base ${isActive ? "text-white/70" : "text-gray-400"}`}>
+            {subtitle}
+          </p>
+        </div>
+
+        <p className={`text-sm leading-relaxed ${isActive ? "text-white/70" : "text-gray-500"}`}>
+          {description}
         </p>
       </div>
-      <p
-        className={`text-xs leading-relaxed mt-auto pt-4 ${
-          isActive ? "text-white/70" : "text-gray-500"
-        }`}
-      >
-        {description}
-      </p>
     </div>
   );
 }

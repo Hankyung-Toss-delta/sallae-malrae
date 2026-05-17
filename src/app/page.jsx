@@ -16,27 +16,34 @@ const STEPS = [
     step: 1,
     title: "담기",
     subtitle: "Hot",
-    description: "살래말래에서 마음에 드는 아이템을 위시리스트에 담으세요.",
+    description: '"와, 이건 사야 해!" 싶은 아이템을 등록하세요.',
+    imageSrc: "/images/landing_page/shopping_cart.png",
+    imageStyle: { width: "550px", height: "550px", bottom: 15, left: -70},
     isActive: false,
   },
   {
     step: 2,
     title: "식히기",
     subtitle: "Cooling",
-    description: "내가 정한 쿨링오프 기간만큼 구매를 잠시 미뤄보세요.",
+    description: "1일? 7일? 당신의 결심만큼 쿨링오프 기간을 설정하세요.",
+    imageSrc: "/images/landing_page/clock_calendar.png",
+    imageStyle: { width: "370px", height: "370px", top: -25, right: -35},
     isActive: true,
   },
   {
     step: 3,
     title: "결정",
     subtitle: "Clear",
-    description: "기간이 지나면 진짜 필요한 물건만 남아 현명한 결정을 하세요.",
+    description: '기간이 끝난 뒤, 집계된 통계를 보며 결정하세요. "아직도 사고 싶나요?"',
+    imageSrc: "/images/landing_page/decision.png",
+    imageStyle: { width: "280px", height: "280px", top: -5, right: 10},
     isActive: false,
   },
 ];
 
 export default function Home() {
   const [day, setDay] = useState(3);
+  const [hoveredStep, setHoveredStep] = useState(null);
 
   const incrementDay = () => setDay((d) => Math.min(d + 1, 31));
   const decrementDay = () => setDay((d) => Math.max(d - 1, 1));
@@ -65,11 +72,13 @@ export default function Home() {
 
       sections.forEach((section) => {
         const bg = section.querySelector(".section-bg");
-        const items = section.querySelectorAll(".section-content > *");
+        const items = section.querySelectorAll(".section-content > *:not(.step-card-fan)");
+        const stepCards = section.querySelectorAll(".step-card-item");
         if (!bg) return;
 
         gsap.set(bg, { yPercent: 100 });
         gsap.set(items, { opacity: 0, y: 30 });
+        if (stepCards.length) gsap.set(stepCards, { opacity: 0, y: 150 });
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -82,9 +91,16 @@ export default function Home() {
         tl.to(bg, { yPercent: 0, duration: 0.6, ease: "power2.out" });
         tl.to(
           items,
-          { opacity: 1, y: 0, duration: 0.4, stagger: 0.2, ease: "power2.out" },
+          { opacity: 1, y: 0, duration: 0.4, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
           "+=0.1"
         );
+        if (stepCards.length) {
+          tl.to(
+            stepCards,
+            { opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
+            "+=0.1"
+          );
+        }
       });
 
       ScrollTrigger.refresh();
@@ -289,7 +305,7 @@ export default function Home() {
           <div className="section-bg absolute inset-0" />
           <div className="section-content relative z-10 w-full px-6">
             <div className="text-center mb-16 gap-4 flex flex-col">
-              <h2 className="text-2xl md:text-6xl font-extrabold text-[#1a3a2e] mb-2">
+              <h2 className="text-2xl md:text-5xl font-extrabold text-[#1a3a2e] mb-2">
                 충동구매를 막는 3단계
               </h2>
               <p className="text-2xl text-gray-500">뜨거운 마음, 차가운 결정으로</p>
@@ -297,24 +313,37 @@ export default function Home() {
 
             {/* 카드 팬 레이아웃 */}
             <div
-              className="relative flex justify-center items-end mx-auto"
-              style={{ height: "300px", maxWidth: "1440px" }}
+              className="step-card-fan relative flex justify-center items-center mx-auto"
+              style={{ height: "480px" }}
             >
-              <div
-                className="absolute z-0"
-                style={{ transform: "translateX(-120px) rotate(-8deg)", bottom: 0 }}
-              >
-                <StepCard {...STEPS[0]} />
-              </div>
-              <div className="relative z-10" style={{ bottom: 0 }}>
-                <StepCard {...STEPS[1]} />
-              </div>
-              <div
-                className="absolute z-0"
-                style={{ transform: "translateX(120px) rotate(8deg)", bottom: 0 }}
-              >
-                <StepCard {...STEPS[2]} />
-              </div>
+              {STEPS.map((step, i) => {
+                const cfg = [
+                  { x: -320, y:   0, rotate: -7, z: 1 },
+                  { x: 0,    y:   -40, rotate:  6, z: 2 },
+                  { x: 320,  y:   0, rotate: -7, z: 3 },
+                ][i];
+                const isHovered = hoveredStep === i;
+                return (
+                  <div
+                    key={step.step}
+                    style={{
+                      position: "absolute",
+                      transform: isHovered
+                        ? `translateX(${cfg.x}px) translateY(${cfg.y - 16}px) rotate(0deg)`
+                        : `translateX(${cfg.x}px) translateY(${cfg.y}px) rotate(${cfg.rotate}deg)`,
+                      zIndex: isHovered ? 10 : cfg.z,
+                      transition: "transform 0.4s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={() => setHoveredStep(i)}
+                    onMouseLeave={() => setHoveredStep(null)}
+                  >
+                    <div className="step-card-item">
+                      <StepCard {...step} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -326,22 +355,24 @@ export default function Home() {
         >
           <div className="section-bg absolute inset-0 bg-[#edf5ef]" />
           <div className="section-content relative z-10 text-center px-6">
-            <p className="text-xl md:text-2xl font-semibold text-[#3d3d3d] mb-3">
+            <p className="text-xl md:text-4xl font-semibold text-[#89928F] mb-3">
               살래말래와 함께
             </p>
-            <h2 className="text-2xl md:text-4xl font-black text-[#214638] mb-12 flex items-center justify-center gap-2 flex-wrap">
+            <h2 className="text-2xl md:text-6xl font-black text-[#89928F] mb-12 gap-4 flex items-center justify-center gap-2 flex-wrap">
               딱
-              <span className="inline-flex items-center bg-white border-2 border-[#214638] rounded-xl px-4 py-1 shadow-sm">
+              <span className="inline-flex items-center rounded-2xl px-5 py-1.5 mt-2 shadow-2xl shadow-gray-500/80 bg-[#F1F1EA] rotate-[-10deg] text-[#4A9F7E]">
                 {day}일
               </span>
               만 참아볼까요?
             </h2>
-            <Link
-              href="/auth/login"
-              className="inline-flex items-center gap-2 px-8 py-3 border border-[#214638] text-[#214638] rounded-full text-sm font-medium hover:bg-[#214638] hover:text-white transition-colors"
-            >
-              쿨링오프 시작하기 →
-            </Link>
+            <div>
+              <Link
+                href="/auth/login"
+                className="px-8 py-5 border-2 border-[#1a3a2e] text-[#1a3a2e] rounded-full text-lg font-bold bg-[#f1f1ea] shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:-translate-x-1 hover:shadow-lg"
+              >
+                쿨링오프 시작하기 →
+              </Link>
+            </div>
           </div>
         </section>
       </main>
