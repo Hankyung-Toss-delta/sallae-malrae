@@ -22,6 +22,7 @@ export default function Header({
   navItems,
   rightSlot,
   logoHref = "/",
+  transparent = false,
   className = "",
 }) {
   const [visible, setVisible] = useState(true);
@@ -59,11 +60,11 @@ export default function Header({
 
   return (
     <header
-      className={`fixed left-0 top-0 z-10 w-full px-10 py-2 transition-transform duration-300 ease-in-out ${
+      className={`fixed left-0 top-0 z-50 w-full px-10 py-2 transition-transform duration-300 ease-in-out ${
         visible ? "translate-y-0" : "-translate-y-full"
       } ${className}`}
     >
-      <div className="flex items-center justify-between gap-8 bg-[#f7fbf8]">
+      <div className={`flex items-center justify-between gap-8 ${transparent ? "bg-transparent" : "bg-[#f7fbf8]"}`}>
         <div className="flex items-end gap-8">
           <Link href={logoHref}>
             <Image
