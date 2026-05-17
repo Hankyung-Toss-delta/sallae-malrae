@@ -57,11 +57,11 @@ export async function GET(request) {
   return successResponse(
     {
       user: { nickname, level },
-      summary: { passed_count: passedCount, saved_amount: savedAmount, success_rate: successRate },
+      summary: { passed_count: passedCount, bought_count: boughtCount, saved_amount: savedAmount, success_rate: successRate },
       recentItems,
       expired_count: Number(expiredRows[0].expired_count),
       categoryChart,
     },
-    '대시보드를 불러왔습니다.',
+    'Dashboard retrieved.',
   );
 }
