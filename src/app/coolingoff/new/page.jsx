@@ -10,16 +10,8 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import ErrorAlert from "@/components/ui/ErrorAlert";
-
-// Category names match DB seed order (IDs 1–6)
-const CATEGORY_OPTIONS = [
-  "패션/뷰티",
-  "전자기기",
-  "가전/가구",
-  "음식/배달",
-  "취미/여행",
-  "기타",
-];
+import { ERROR_MESSAGES } from "@/constants/errors";
+import { CATEGORY_OPTIONS } from "@/constants/categories";
 
 const CALENDAR_WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -49,7 +41,7 @@ function formatDateStr(year, month, day) {
 }
 
 function buildExpireAt(dateStr, period, hour) {
-  const h = parseInt(hour);
+  const h = parseInt(hour, 10);
   let hour24;
   if (period === "오전") {
     hour24 = h === 12 ? 0 : h;
@@ -101,11 +93,16 @@ function DropdownField({
   options,
   placeholder = "선택",
   defaultValue = "",
+  value: controlledValue,
+  onChange: onChangeProp,
+  disabledValues = [],
   suffix = "",
   className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(defaultValue);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const isControlled = controlledValue !== undefined;
+  const selectedValue = isControlled ? controlledValue : internalValue;
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -176,11 +173,14 @@ function DropdownField({
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => {
-                      setSelectedValue(option);
+                      if (disabledValues.includes(option)) return;
+                      if (isControlled) { onChangeProp?.(option); } else { setInternalValue(option); }
                       setIsOpen(false);
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                      isSelected
+                      disabledValues.includes(option)
+                        ? "text-[#C5CCC3] cursor-not-allowed"
+                        : isSelected
                         ? "bg-[#E8F1E9] text-[#38503E]"
                         : "text-[#314231] hover:bg-[#F6FAF5]"
                     }`}
@@ -387,7 +387,42 @@ function ProductInfoCard() {
   );
 }
 
-function CoolingOffTimePicker() {
+function toHour24(period, hourStr) {
+  const h = parseInt(hourStr, 10);
+  if (period === "오전") return h === 12 ? 0 : h;
+  return h === 12 ? 12 : h + 12;
+}
+
+function getMinValidTime(minHour24) {
+  for (const p of TIME_PERIOD_OPTIONS) {
+    for (const h of TIME_HOUR_OPTIONS) {
+      if (toHour24(p, h) >= minHour24) return { period: p, hour: h };
+    }
+  }
+  return null;
+}
+
+function CoolingOffTimePicker({ minHour24 }) {
+  const [period, setPeriod] = useState("오후");
+  const [hour, setHour] = useState("08");
+
+  const effectiveTime =
+    minHour24 !== null && toHour24(period, hour) < minHour24
+      ? (getMinValidTime(minHour24) ?? { period, hour })
+      : { period, hour };
+
+  const disabledPeriods =
+    minHour24 !== null
+      ? TIME_PERIOD_OPTIONS.filter((p) =>
+          TIME_HOUR_OPTIONS.every((h) => toHour24(p, h) < minHour24)
+        )
+      : [];
+
+  const disabledHours =
+    minHour24 !== null
+      ? TIME_HOUR_OPTIONS.filter((h) => toHour24(effectiveTime.period, h) < minHour24)
+      : [];
+
   return (
     <div className="mt-4 rounded-[20px] bg-[#FBFCFB] p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -407,16 +442,20 @@ function CoolingOffTimePicker() {
         <DropdownField
           id="decisionPeriod"
           name="decisionPeriod"
-          defaultValue="오후"
           options={TIME_PERIOD_OPTIONS}
+          value={effectiveTime.period}
+          onChange={setPeriod}
+          disabledValues={disabledPeriods}
         />
 
         <DropdownField
           id="decisionHour"
           name="decisionHour"
-          defaultValue="08"
           options={TIME_HOUR_OPTIONS}
+          value={effectiveTime.hour}
+          onChange={setHour}
           suffix="시"
+          disabledValues={disabledHours}
         />
       </div>
 
@@ -428,6 +467,11 @@ function CoolingOffTimePicker() {
 }
 
 const MONTH_NAMES = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+function getMinHour24() {
+  const now = new Date();
+  return now.getMinutes() === 0 ? now.getHours() + 1 : now.getHours() + 2;
+}
 
 function CoolingOffPeriodPicker() {
   const todayDate = new Date();
@@ -447,12 +491,21 @@ function CoolingOffPeriodPicker() {
 
   const todayYear = todayDate.getFullYear();
   const todayMonth = todayDate.getMonth();
+  const todayMinHour24 = getMinHour24();
 
   const isDisabled = (day) => {
     if (!day) return true;
     const d = new Date(viewYear, viewMonth, day);
-    return d < todayDate || d > maxDate;
+    if (d < todayDate || d > maxDate) return true;
+    if (d.getTime() === todayDate.getTime()) return todayMinHour24 > 23;
+    return false;
   };
+
+  const isSelectedToday =
+    selectedDay !== null &&
+    viewYear === todayYear &&
+    viewMonth === todayMonth &&
+    selectedDay === todayDate.getDate();
 
   const canGoPrev = viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
   const canGoNext = (() => {
@@ -562,7 +615,7 @@ function CoolingOffPeriodPicker() {
           )}
         </div>
 
-        <CoolingOffTimePicker />
+        <CoolingOffTimePicker minHour24={isSelectedToday ? todayMinHour24 : null} />
       </div>
     </div>
   );
@@ -671,15 +724,6 @@ function CoolingOffDetailCard() {
   );
 }
 
-const ERROR_MESSAGES = {
-  REQUIRED_FIELD: "필수 항목을 모두 입력해주세요.",
-  INVALID_PRICE: "올바른 가격을 입력해주세요.",
-  INVALID_CATEGORY: "카테고리를 선택해주세요.",
-  INVALID_IMPULSE_SCORE: "구매 충동 점수를 확인해주세요.",
-  INVALID_EXPIRE_AT: "쿨링오프 날짜와 시간을 다시 확인해주세요.",
-  INVALID_IMAGE: "이미지는 5MB 이하의 JPG, PNG, WebP, GIF만 가능해요.",
-  UNAUTHORIZED: "세션이 만료됐어요. 다시 로그인해주세요.",
-};
 
 export default function CoolingOffNewPage() {
   const router = useRouter();
@@ -721,12 +765,12 @@ export default function CoolingOffNewPage() {
         return;
       }
 
-      if (json.message === "UNAUTHORIZED") {
+      if (json.code === 'UNAUTHORIZED') {
         router.push("/auth/login");
         return;
       }
 
-      setError(ERROR_MESSAGES[json.message] ?? "오류가 발생했어요. 다시 시도해주세요.");
+      setError(ERROR_MESSAGES[json.code] ?? "오류가 발생했어요. 다시 시도해주세요.");
     } catch {
       setError("오류가 발생했어요. 다시 시도해주세요.");
     } finally {

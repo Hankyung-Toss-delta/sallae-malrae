@@ -30,12 +30,16 @@ export default function CoolingOffPage() {
   const carouselRef = useRef(null);
 
   useEffect(() => {
-    fetch('/api/items?status=all')
+    fetch('/api/items?status=all', { method: 'GET' })
       .then((r) => r.json())
       .then((json) => {
-        if (json.message === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
-        if (json.success) { setFetchError(false); setItems(json.data.items); }
-        else setFetchError(true);
+        if (!json.success) {
+          if (json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+          setFetchError(true);
+          return;
+        }
+        setFetchError(false);
+        setItems(json.data.items);
       })
       .catch(() => setFetchError(true));
   }, [shouldRefetch, router]);
@@ -103,7 +107,7 @@ export default function CoolingOffPage() {
         body: JSON.stringify({ status }),
       });
       const json = await res.json();
-      if (json.message === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      if (!json.success && json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
       setShouldRefetch((n) => n + 1);
     } catch {
       setShouldRefetch((n) => n + 1);
@@ -118,10 +122,10 @@ export default function CoolingOffPage() {
     setCarouselIndex((i) => Math.min(maxCarouselIndex, i + 1));
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen flex flex-col">
       <Header activeMenu="coolingoff" />
 
-      <section className="max-w-[1100px] mx-auto px-6 py-30">
+      <section className="flex-1 max-w-[1100px] mx-auto px-6 py-30 w-full">
 
         {/* 메인 헤더 */}
         <div className="flex items-start justify-between mb-8">
@@ -265,6 +269,10 @@ export default function CoolingOffPage() {
         {/* 카드 목록 */}
         {fetchError ? (
           <p className="text-sm text-gray-400 text-center py-8">목록을 불러오지 못했어요.</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">
+            {filter === "ongoing" ? "참는 중인 항목이 없어요." : "완료된 항목이 없어요."}
+          </p>
         ) : (
           <div className="grid grid-cols-3 gap-4">
             {filtered.map((item) => (
