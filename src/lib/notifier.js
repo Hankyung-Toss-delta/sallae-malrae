@@ -1,5 +1,5 @@
-import { query } from '@/lib/db';
-import { sendMail } from '@/lib/mailer';
+import { query } from './db.js';
+import { sendMail } from './mailer.js';
 
 // 현재 시각을 정각으로 내림 (분/초/ms = 0)
 function floorToHour(date) {
