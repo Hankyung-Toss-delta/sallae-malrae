@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-import AuthCard from "@/components/auth/AuthCard";
 import Header from "@/components/layout/Header";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
@@ -30,7 +29,7 @@ export default function LoginPage() {
     setErrorMessage("");
 
     if (!email || !password) {
-      setErrorMessage(ERROR_MESSAGES.REQUIRED_FIELD);
+      setErrorMessage("이메일과 비밀번호를 입력해주세요.");
       return;
     }
 
@@ -62,7 +61,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-4 pt-20 pb-24">
       <Header variant="auth" />
 
-      <AuthCard>
+      <div className="w-full max-w-md px-2 py-6 lg:rounded-2xl lg:bg-white lg:p-8 lg:shadow-sm">
         <h1 className="mt-4 mb-2 text-2xl font-bold">반가워요!</h1>
 
         <p className="mb-10 text-sm text-gray-400">
@@ -119,7 +118,7 @@ export default function LoginPage() {
             회원가입
           </Link>
         </div>
-      </AuthCard>
+      </div>
     </main>
   );
 }
