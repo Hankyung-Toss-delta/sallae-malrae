@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import AuthCard from "@/components/auth/AuthCard";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
@@ -26,6 +27,10 @@ export default function SignupPage() {
 
     setErrorMessage("");
 
+    if (!email || !nickname || !password || !passwordConfirm) {
+      setErrorMessage(ERROR_MESSAGES.REQUIRED_FIELD);
+      return;
+    }
     if (password.length < 8) {
       setErrorMessage(ERROR_MESSAGES.PASSWORD_TOO_SHORT);
       return;
@@ -46,7 +51,9 @@ export default function SignupPage() {
       const body = await res.json();
 
       if (!body.success) {
-        setErrorMessage(ERROR_MESSAGES[body.code] ?? "회원가입에 실패했습니다.");
+        setErrorMessage(
+          ERROR_MESSAGES[body.code] ?? "회원가입에 실패했습니다.",
+        );
         return;
       }
 
@@ -59,94 +66,116 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="flex min-h-screen items-center justify-center px-4 pt-20 pb-8">
       <Header variant="auth" />
 
-      <AuthCard>
-        <h1 className="mt-2 mb-1 text-2xl font-bold">시작해볼까요?</h1>
-
-        <p className="mb-6 text-sm text-gray-400">
-          계정을 만들고 살래말래를 경험해보세요.
-        </p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="flex flex-col gap-3">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              label="이메일"
-              placeholder="hello@example.com"
-              className="py-2"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <Input
-              id="nickname"
-              name="nickname"
-              label="닉네임"
-              className="py-2"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              required
-              maxLength={20}
-            />
-
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              label="비밀번호"
-              placeholder="8자 이상"
-              className="py-2"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
-
-            <Input
-              id="passwordConfirm"
-              name="passwordConfirm"
-              type="password"
-              label="비밀번호 확인"
-              className="py-2"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              required
-            />
+      <div className="grid w-full max-w-3xl grid-cols-1 overflow-hidden lg:grid-cols-2 lg:rounded-2xl lg:bg-white lg:shadow-sm">
+        <aside className="px-2 pb-2 lg:flex lg:flex-col lg:gap-8 lg:bg-gradient-to-br lg:from-[#EAF1EA] lg:to-[#D9E7DB] lg:px-10 lg:py-12 lg:pb-12">
+          <div className="lg:mt-8">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-[#5D7A62] lg:mb-3 lg:text-sm">
+              회원가입
+            </p>
+            <h2 className="text-xl font-bold leading-snug text-gray-900 lg:text-[26px]">
+              잠깐 멈춤이,
+              <br />
+              의미있는 절약이 됩니다.
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-gray-500 lg:mt-3 lg:text-gray-600">
+              살래말래가 당신의 소비 습관을 함께 지켜드릴게요.
+            </p>
           </div>
 
-          {errorMessage && (
-            <p className="mt-3 text-sm text-red-500" role="alert">
-              {errorMessage}
-            </p>
-          )}
+          <ul className="mt-0 hidden flex-col gap-2 text-sm text-[#3F5E4A] lg:flex">
+            <li className="flex items-center gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8FA58D] text-xs text-white">
+                ✓
+              </span>
+              충동구매 잠깐 멈추기
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#8FA58D] text-xs text-white">
+                ✓
+              </span>
+              진짜 필요한 건지 다시 보기
+            </li>
+          </ul>
+        </aside>
 
-          <Button
-            type="submit"
-            className="mt-6"
-            fullWidth
-            size="lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "가입 중..." : "가입하고 시작하기"}
-          </Button>
-        </form>
+        <div className="flex flex-col justify-center px-2 py-6 lg:px-10 lg:py-10">
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="flex flex-col gap-3">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                label="이메일"
+                placeholder="hello@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
 
-        <div className="mt-4 mb-2 flex items-center justify-center gap-2 text-xs">
-          <span className="text-gray-500">이미 계정이 있으신가요?</span>
+              <Input
+                id="nickname"
+                name="nickname"
+                label="닉네임"
+                placeholder="절약왕 (최대 20자)"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                required
+                maxLength={20}
+              />
 
-          <Link
-            href="/auth/login"
-            className="font-medium text-[#8FA58D] hover:underline"
-          >
-            로그인
-          </Link>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                label="비밀번호"
+                placeholder="8자 이상"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+
+              <Input
+                id="passwordConfirm"
+                name="passwordConfirm"
+                type="password"
+                label="비밀번호 확인"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="mt-3 min-h-[52px]">
+              <ErrorAlert message={errorMessage} />
+            </div>
+
+            <Button
+              type="submit"
+              className="mt-6"
+              fullWidth
+              size="lg"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "가입 중..." : "가입하고 시작하기"}
+            </Button>
+          </form>
+
+          <div className="mt-4 mb-2 flex items-center justify-center gap-2 text-xs">
+            <span className="text-gray-500">이미 계정이 있으신가요?</span>
+
+            <Link
+              href="/auth/login"
+              className="font-medium text-[#8FA58D] hover:underline"
+            >
+              로그인
+            </Link>
+          </div>
         </div>
-      </AuthCard>
+      </div>
     </main>
   );
 }
