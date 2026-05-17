@@ -133,7 +133,7 @@ function DashboardContent({ data }) {
     {
       label: "성공률",
       value: `${successRate}%`,
-      hint: passedCount + (summary.bought_count ?? 0) === 0 ? "아직 결정한 항목이 없어요" : "누적 기준",
+      hint: passedCount + summary.bought_count === 0 ? "아직 결정한 항목이 없어요" : "누적 기준",
       progress: successRate,
     },
     {
@@ -171,9 +171,54 @@ function DashboardContent({ data }) {
         </p>
 
         {expired_count > 0 && (
-          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#FFF4E5] px-3 py-1 text-xs font-medium text-[#B4711C]">
-            기한이 지난 항목이 {expired_count}개 있어요. 결정해주세요.
-          </p>
+          <Link
+            href="/coolingoff"
+            className="group mt-3 flex items-center gap-3 rounded-2xl border border-[#F4C57A] bg-gradient-to-r from-[#FFF4E0] to-[#FFE9C8] px-4 py-3 shadow-[0_6px_18px_rgba(180,113,28,0.10)] transition hover:from-[#FFEFCF] hover:to-[#FFE0B0]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4A93C] text-white">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[#8C5311]">
+                기한이 지난 항목이 {expired_count}개 있어요
+              </p>
+              <p className="mt-0.5 text-xs text-[#A8763A]">
+                결정하지 않으면 통계에 반영되지 않아요.
+              </p>
+            </div>
+
+            <span className="flex items-center gap-1 text-xs font-medium text-[#8C5311] transition group-hover:gap-1.5">
+              결정하러 가기
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </span>
+          </Link>
         )}
       </div>
 
@@ -302,15 +347,15 @@ function CategoryChartCard({ items, background }) {
           </p>
         </div>
       ) : (
-        <div className="mt-2.5 flex flex-1 flex-col items-center justify-center gap-4 lg:flex-row lg:justify-between">
+        <div className="mt-2.5 flex flex-1 flex-col items-center justify-center gap-6 lg:flex-row lg:justify-center lg:gap-12">
           <div
-            className="relative h-32 w-32 shrink-0 rounded-full lg:h-36 lg:w-36"
+            className="relative h-36 w-36 shrink-0 rounded-full lg:h-40 lg:w-40"
             style={{ background }}
           >
             <div className="absolute inset-[26%] rounded-full bg-[#F7F8F2]" />
           </div>
 
-          <div className="w-full space-y-1.5 lg:max-w-[200px]">
+          <div className="w-full max-w-[220px] space-y-2 lg:w-[180px] lg:max-w-none">
             {items.map((item) => (
               <div
                 key={item.name}
