@@ -59,7 +59,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 pt-20 pb-8">
+    <main className="flex min-h-screen items-center justify-center px-4 pt-20 pb-24">
       <Header variant="auth" />
 
       <AuthCard>
