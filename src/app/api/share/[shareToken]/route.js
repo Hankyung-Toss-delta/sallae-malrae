@@ -48,7 +48,7 @@ export async function GET(request, { params }) {
     {
       nickname: user.nickname,
       level: user.level,
-      summary: { passed_count: passedCount, saved_amount: savedAmount, success_rate: successRate },
+      summary: { passed_count: passedCount, bought_count: boughtCount, saved_amount: savedAmount, success_rate: successRate },
       categoryChart,
     },
     'Share page retrieved.',
