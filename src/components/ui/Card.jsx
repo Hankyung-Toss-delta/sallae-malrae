@@ -70,7 +70,7 @@ export function CoolingOffCard({ item, onClick }) {
       </div>
 
       <div className="border-t border-gray-100 px-4 py-2.5 flex items-center justify-between">
-        <p className="text-sm text-gray-500 truncate mr-4">&quot;{memo}&quot;</p>
+        <p className="text-sm text-gray-500 truncate mr-4">&quot;{memo ?? "메모 없음"}&quot;</p>
         <div className="flex items-center gap-1 flex-shrink-0">
           <span className="text-base">🔥</span>
           <span className="text-sm font-semibold text-gray-700">
