@@ -42,12 +42,13 @@ export function CoolingOffCard({ item, onClick }) {
             )}
           </div>
 
-          <div className="w-[90px] h-[90px] rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
+          <div className="relative w-[90px] h-[90px] rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
             {image ? (
               <Image
                 src={image}
                 alt={name}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             ) : (
               <div className="w-full h-full bg-gray-200" />

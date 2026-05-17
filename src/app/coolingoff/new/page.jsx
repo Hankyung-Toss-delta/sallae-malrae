@@ -682,6 +682,8 @@ export default function CoolingOffNewPage() {
       const decisionPeriod = raw.get("decisionPeriod");
       const decisionHour = raw.get("decisionHour");
 
+      if (!decisionDate) return;
+
       const formData = new FormData();
       formData.append("name", raw.get("name"));
       formData.append("price", raw.get("price"));

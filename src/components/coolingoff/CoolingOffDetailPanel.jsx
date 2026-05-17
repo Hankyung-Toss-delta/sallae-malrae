@@ -58,15 +58,16 @@ export default function CoolingOffDetailPanel({
 
               <div className="flex-1 overflow-y-auto px-7 min-h-0">
                 <div className="flex flex-col gap-6">
-                <div className="w-full bg-white rounded-2xl overflow-hidden flex items-center justify-center" style={{ minHeight: 220 }}>
+                <div className="relative w-full h-[220px] bg-white rounded-2xl overflow-hidden">
                   {item.image ? (
                     <Image
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                     />
                   ) : (
-                    <div className="w-full h-[300px] bg-gray-100 rounded-2xl" />
+                    <div className="w-full h-full bg-gray-100 rounded-2xl" />
                   )}
                 </div>
 
