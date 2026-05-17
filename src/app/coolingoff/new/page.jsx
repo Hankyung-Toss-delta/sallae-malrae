@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import Image from "next/image";
 import Header from "@/components/layout/Header";
@@ -8,24 +9,11 @@ import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
-
-const CATEGORY_OPTIONS = [
-  "패션/뷰티",
-  "전자기기",
-  "가전/가구",
-  "음식/배달",
-  "취미/여행",
-  "기타",
-];
+import ErrorAlert from "@/components/ui/ErrorAlert";
+import { ERROR_MESSAGES } from "@/constants/errors";
+import { CATEGORY_OPTIONS } from "@/constants/categories";
 
 const CALENDAR_WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-
-const CALENDAR_WEEKS = [
-  [null, null, null, null, null, 1, 2],
-  [3, 4, 5, 6, 7, 8, 9],
-  [10, 11, 12, 13, 14, 15, 16],
-  [17, 18, 19, 20, 21, 22, 23],
-];
 
 const TIME_PERIOD_OPTIONS = ["오전", "오후"];
 const TIME_HOUR_OPTIONS = Array.from({ length: 12 }, (_, index) =>
@@ -35,6 +23,33 @@ const IMPULSE_LEVEL_OPTIONS = Array.from(
   { length: 10 },
   (_, index) => index + 1,
 );
+
+function getCalendarWeeks(year, month) {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+function formatDateStr(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function buildExpireAt(dateStr, period, hour) {
+  const h = parseInt(hour, 10);
+  let hour24;
+  if (period === "오전") {
+    hour24 = h === 12 ? 0 : h;
+  } else {
+    hour24 = h === 12 ? 12 : h + 12;
+  }
+  return new Date(`${dateStr}T${String(hour24).padStart(2, "0")}:00:00+09:00`).toISOString();
+}
 
 function FieldLabel({ children, required = true }) {
   return (
@@ -78,11 +93,16 @@ function DropdownField({
   options,
   placeholder = "선택",
   defaultValue = "",
+  value: controlledValue,
+  onChange: onChangeProp,
+  disabledValues = [],
   suffix = "",
   className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(defaultValue);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const isControlled = controlledValue !== undefined;
+  const selectedValue = isControlled ? controlledValue : internalValue;
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -153,11 +173,14 @@ function DropdownField({
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => {
-                      setSelectedValue(option);
+                      if (disabledValues.includes(option)) return;
+                      if (isControlled) { onChangeProp?.(option); } else { setInternalValue(option); }
                       setIsOpen(false);
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                      isSelected
+                      disabledValues.includes(option)
+                        ? "text-[#C5CCC3] cursor-not-allowed"
+                        : isSelected
                         ? "bg-[#E8F1E9] text-[#38503E]"
                         : "text-[#314231] hover:bg-[#F6FAF5]"
                     }`}
@@ -246,8 +269,8 @@ function ImageUploadBox() {
       <div className="rounded-xl border border-[#E2E8E0] bg-[#FBFCFB] px-4 py-3">
         <input
           ref={fileInputRef}
-          id="productImage"
-          name="productImage"
+          id="image"
+          name="image"
           type="file"
           accept="image/*"
           onChange={handleImageChange}
@@ -297,14 +320,15 @@ function ProductInfoCard() {
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)_160px] items-end gap-3 sm:grid-cols-[minmax(0,1fr)_220px] sm:gap-4">
         <div className="min-w-0">
           <Input
-            id="productName"
-            name="productName"
+            id="name"
+            name="name"
             label={
               <>
                 상품명 <span className="text-red-500">*</span>
               </>
             }
             placeholder="무엇을 사고 싶나요?"
+            maxLength={100}
             className="py-3.5"
           />
         </div>
@@ -331,7 +355,11 @@ function ProductInfoCard() {
 
       <div className="mt-4">
         <FieldLabel>카테고리</FieldLabel>
-        <input name="category" type="hidden" value={selectedCategory} />
+        <input
+          name="category_id"
+          type="hidden"
+          value={selectedCategory ? String(CATEGORY_OPTIONS.indexOf(selectedCategory) + 1) : ""}
+        />
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {CATEGORY_OPTIONS.map((category) => {
@@ -359,7 +387,42 @@ function ProductInfoCard() {
   );
 }
 
-function CoolingOffTimePicker() {
+function toHour24(period, hourStr) {
+  const h = parseInt(hourStr, 10);
+  if (period === "오전") return h === 12 ? 0 : h;
+  return h === 12 ? 12 : h + 12;
+}
+
+function getMinValidTime(minHour24) {
+  for (const p of TIME_PERIOD_OPTIONS) {
+    for (const h of TIME_HOUR_OPTIONS) {
+      if (toHour24(p, h) >= minHour24) return { period: p, hour: h };
+    }
+  }
+  return null;
+}
+
+function CoolingOffTimePicker({ minHour24 }) {
+  const [period, setPeriod] = useState("오후");
+  const [hour, setHour] = useState("08");
+
+  const effectiveTime =
+    minHour24 !== null && toHour24(period, hour) < minHour24
+      ? (getMinValidTime(minHour24) ?? { period, hour })
+      : { period, hour };
+
+  const disabledPeriods =
+    minHour24 !== null
+      ? TIME_PERIOD_OPTIONS.filter((p) =>
+          TIME_HOUR_OPTIONS.every((h) => toHour24(p, h) < minHour24)
+        )
+      : [];
+
+  const disabledHours =
+    minHour24 !== null
+      ? TIME_HOUR_OPTIONS.filter((h) => toHour24(effectiveTime.period, h) < minHour24)
+      : [];
+
   return (
     <div className="mt-4 rounded-[20px] bg-[#FBFCFB] p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -379,16 +442,20 @@ function CoolingOffTimePicker() {
         <DropdownField
           id="decisionPeriod"
           name="decisionPeriod"
-          defaultValue="오후"
           options={TIME_PERIOD_OPTIONS}
+          value={effectiveTime.period}
+          onChange={setPeriod}
+          disabledValues={disabledPeriods}
         />
 
         <DropdownField
           id="decisionHour"
           name="decisionHour"
-          defaultValue="08"
           options={TIME_HOUR_OPTIONS}
+          value={effectiveTime.hour}
+          onChange={setHour}
           suffix="시"
+          disabledValues={disabledHours}
         />
       </div>
 
@@ -399,8 +466,65 @@ function CoolingOffTimePicker() {
   );
 }
 
+const MONTH_NAMES = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+function getMinHour24() {
+  const now = new Date();
+  return now.getMinutes() === 0 ? now.getHours() + 1 : now.getHours() + 2;
+}
+
 function CoolingOffPeriodPicker() {
-  const selectedDay = 15;
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const maxDate = new Date(todayDate);
+  maxDate.setDate(maxDate.getDate() + 30);
+
+  const defaultDate = new Date(todayDate);
+  defaultDate.setDate(defaultDate.getDate() + 7);
+
+  const [viewYear, setViewYear] = useState(defaultDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(defaultDate.getMonth());
+  const [selectedDay, setSelectedDay] = useState(defaultDate.getDate());
+
+  const selectedDateStr = selectedDay ? formatDateStr(viewYear, viewMonth, selectedDay) : "";
+  const calendarWeeks = getCalendarWeeks(viewYear, viewMonth);
+
+  const todayYear = todayDate.getFullYear();
+  const todayMonth = todayDate.getMonth();
+  const todayMinHour24 = getMinHour24();
+
+  const isDisabled = (day) => {
+    if (!day) return true;
+    const d = new Date(viewYear, viewMonth, day);
+    if (d < todayDate || d > maxDate) return true;
+    if (d.getTime() === todayDate.getTime()) return todayMinHour24 > 23;
+    return false;
+  };
+
+  const isSelectedToday =
+    selectedDay !== null &&
+    viewYear === todayYear &&
+    viewMonth === todayMonth &&
+    selectedDay === todayDate.getDate();
+
+  const canGoPrev = viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
+  const canGoNext = (() => {
+    const nextYear = viewMonth === 11 ? viewYear + 1 : viewYear;
+    const nextMonth = viewMonth === 11 ? 0 : viewMonth + 1;
+    return new Date(nextYear, nextMonth, 1) <= maxDate;
+  })();
+
+  const handlePrev = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else { setViewMonth((m) => m - 1); }
+    setSelectedDay(null);
+  };
+
+  const handleNext = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else { setViewMonth((m) => m + 1); }
+    setSelectedDay(null);
+  };
 
   return (
     <div className="mt-6">
@@ -426,26 +550,30 @@ function CoolingOffPeriodPicker() {
           id="decisionDate"
           name="decisionDate"
           type="hidden"
-          value="2026-05-15"
+          value={selectedDateStr}
           readOnly
         />
 
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D6DDD4] text-base font-semibold text-[#5B655D] transition-colors hover:bg-[#F6FAF5]"
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D6DDD4] text-base font-semibold text-[#5B655D] transition-colors hover:bg-[#F6FAF5] disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="이전 달 보기"
           >
             &#8249;
           </button>
 
           <p className="text-base font-semibold text-[#1F2A1F] sm:text-lg">
-            2026년 5월
+            {viewYear}년 {MONTH_NAMES[viewMonth]}
           </p>
 
           <button
             type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D6DDD4] text-base font-semibold text-[#5B655D] transition-colors hover:bg-[#F6FAF5]"
+            onClick={handleNext}
+            disabled={!canGoNext}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D6DDD4] text-base font-semibold text-[#5B655D] transition-colors hover:bg-[#F6FAF5] disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="다음 달 보기"
           >
             &#8250;
@@ -459,15 +587,19 @@ function CoolingOffPeriodPicker() {
         </div>
 
         <div className="mt-2.5 grid grid-cols-7 gap-1.5">
-          {CALENDAR_WEEKS.flat().map((day, index) =>
+          {calendarWeeks.flat().map((day, index) =>
             day ? (
               <button
                 key={`${day}-${index}`}
                 type="button"
+                disabled={isDisabled(day)}
                 aria-pressed={day === selectedDay}
+                onClick={() => setSelectedDay(day)}
                 className={`flex h-10 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
                   day === selectedDay
                     ? "border-[#8FA58D] bg-[#E8F1E9] text-[#38503E]"
+                    : isDisabled(day)
+                    ? "border-[#D6DDD4] bg-white text-[#C5CCC3] cursor-not-allowed"
                     : "border-[#D6DDD4] bg-white text-[#3B443B] hover:bg-[#F6FAF5]"
                 }`}
               >
@@ -483,7 +615,7 @@ function CoolingOffPeriodPicker() {
           )}
         </div>
 
-        <CoolingOffTimePicker />
+        <CoolingOffTimePicker minHour24={isSelectedToday ? todayMinHour24 : null} />
       </div>
     </div>
   );
@@ -508,8 +640,8 @@ function ImpulseSlider() {
 
       <div className="mt-4">
         <input
-          id="impulseLevel"
-          name="impulseLevel"
+          id="impulse_score"
+          name="impulse_score"
           type="range"
           min="1"
           max="10"
@@ -575,12 +707,13 @@ function CoolingOffDetailCard() {
       <ImpulseSlider />
 
       <div className="mt-6">
-        <FieldLabel>이걸 사고 싶은 이유가 있나요? (최대 150자) </FieldLabel>
+        <FieldLabel>이걸 사고 싶은 이유가 있나요? (최대 500자) </FieldLabel>
 
         <textarea
-          id="reason"
-          name="reason"
+          id="memo"
+          name="memo"
           rows="4"
+          maxLength={500}
           placeholder="지금 당장 필요한 이유를 적어보세요."
           className="w-full resize-none rounded-2xl border border-gray-300 px-5 py-4 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-[#8EAA92]"
         />
@@ -591,7 +724,60 @@ function CoolingOffDetailCard() {
   );
 }
 
+
 export default function CoolingOffNewPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const raw = new FormData(e.target);
+      const decisionDate = raw.get("decisionDate");
+      const decisionPeriod = raw.get("decisionPeriod");
+      const decisionHour = raw.get("decisionHour");
+
+      if (!decisionDate) {
+        setError("쿨링오프 날짜를 선택해주세요.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("name", raw.get("name"));
+      formData.append("price", raw.get("price"));
+      formData.append("category_id", raw.get("category_id"));
+      formData.append("impulse_score", raw.get("impulse_score"));
+      formData.append("expire_at", buildExpireAt(decisionDate, decisionPeriod, decisionHour));
+      const memo = raw.get("memo");
+      if (memo) formData.append("memo", memo);
+      const image = raw.get("image");
+      if (image && image.size > 0) formData.append("image", image);
+
+      const res = await fetch("/api/items", { method: "POST", body: formData });
+      const json = await res.json();
+
+      if (json.success) {
+        router.push("/coolingoff");
+        return;
+      }
+
+      if (json.code === 'UNAUTHORIZED') {
+        router.push("/auth/login");
+        return;
+      }
+
+      setError(ERROR_MESSAGES[json.code] ?? "오류가 발생했어요. 다시 시도해주세요.");
+    } catch {
+      setError("오류가 발생했어요. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col bg-[#F6FAF5]">
       <Header activeMenu="coolingoff" />
@@ -600,25 +786,34 @@ export default function CoolingOffNewPage() {
         <div className="mx-auto flex w-full max-w-3xl flex-col items-center">
           <PageTitle />
 
-          <div className="mt-8 flex w-full max-w-2xl flex-col gap-5">
-            <ProductInfoCard />
-            <CoolingOffDetailCard />
-          </div>
+          <form
+            onSubmit={handleSubmit}
+            className="mt-8 flex w-full max-w-2xl flex-col items-center gap-5"
+          >
+            <div className="flex w-full flex-col gap-5">
+              <ProductInfoCard />
+              <CoolingOffDetailCard />
+            </div>
 
-          <div className="mt-6 flex w-full max-w-2xl gap-3">
-            <Button
-              variant="secondary"
-              size="lg"
-              fullWidth
-              className="border-transparent bg-[#D8DDDA] text-[#5B655D] hover:bg-[#CDD4D0]"
-            >
-              취소
-            </Button>
+            <ErrorAlert message={error} className="w-full" />
 
-            <Button size="lg" fullWidth>
-              등록하고 멈춰보기
-            </Button>
-          </div>
+            <div className="flex w-full gap-3">
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                type="button"
+                onClick={() => router.push("/coolingoff")}
+                className="border-transparent bg-[#D8DDDA] text-[#5B655D] hover:bg-[#CDD4D0]"
+              >
+                취소
+              </Button>
+
+              <Button type="submit" size="lg" fullWidth disabled={isSubmitting}>
+                등록하고 멈춰보기
+              </Button>
+            </div>
+          </form>
         </div>
       </section>
 
