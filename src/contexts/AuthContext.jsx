@@ -9,7 +9,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
   const login = (userInfo) => setUser(userInfo);
-  const logout = () => setUser(null);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "DELETE" });
+    } catch {
+      // 네트워크 오류여도 클라이언트 상태는 비움(사용자 의도 보존).
+    } finally {
+      setUser(null);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ user, isLoggedIn: user !== null, login, logout }}>

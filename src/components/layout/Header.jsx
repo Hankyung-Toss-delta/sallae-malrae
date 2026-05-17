@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DEFAULT_NAV_ITEMS = [
   { key: "dashboard", href: "/dashboard", label: "대시보드" },
@@ -24,8 +26,18 @@ export default function Header({
   logoHref = "/",
   className = "",
 }) {
+  const router = useRouter();
+  const { logout } = useAuth();
   const [visible, setVisible] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const lastScrollY = useRef(0);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    await logout();
+    router.push("/auth/login");
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,12 +61,14 @@ export default function Header({
   const resolvedRightSlot =
     rightSlot ??
     (!isAuthPage ? (
-      <Link
-        href="/auth/login"
-        className="text-sm font-normal text-[#5D7A62]"
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className="cursor-pointer text-sm font-normal text-[#5D7A62] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
       >
-        로그아웃
-      </Link>
+        {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
+      </button>
     ) : null);
 
   return (
