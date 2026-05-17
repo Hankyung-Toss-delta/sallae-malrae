@@ -35,10 +35,11 @@ export default function Input({
         className={`
           w-full rounded-xl border px-5 py-3 text-sm outline-none transition-colors
           placeholder:text-gray-400
+          focus-visible:ring-2 focus-visible:ring-offset-0
           ${
             error
-              ? "border-[#D96C6C] focus:border-[#D96C6C]"
-              : "border-gray-300 focus:border-[#8EAA92]"
+              ? "border-[#D96C6C] focus:border-[#D96C6C] focus-visible:ring-[#D96C6C]/25"
+              : "border-gray-300 focus:border-[#8EAA92] focus-visible:ring-[#8EAA92]/25"
           }
           ${className}
         `}

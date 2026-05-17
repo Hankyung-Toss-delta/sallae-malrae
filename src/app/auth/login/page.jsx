@@ -7,6 +7,7 @@ import Link from "next/link";
 import Header from "@/components/layout/Header";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
@@ -84,16 +85,18 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
+              autoFocus
             />
 
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
           </div>
 

@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
 export default function SignupPage() {
@@ -113,6 +114,8 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
+                autoFocus
               />
 
               <Input
@@ -124,28 +127,29 @@ export default function SignupPage() {
                 onChange={(e) => setNickname(e.target.value)}
                 required
                 maxLength={20}
+                autoComplete="nickname"
               />
 
-              <Input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 label="비밀번호"
                 placeholder="8자 이상"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                autoComplete="new-password"
               />
 
-              <Input
+              <PasswordInput
                 id="passwordConfirm"
                 name="passwordConfirm"
-                type="password"
                 label="비밀번호 확인"
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
 
