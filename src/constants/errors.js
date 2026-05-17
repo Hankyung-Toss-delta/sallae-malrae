@@ -36,3 +36,15 @@ export const ERRORS = {
   // 정책 위반
   CANNOT_DELETE_DECIDED:  { message: 'Decided items cannot be deleted.',                  status: 400 },
 };
+
+// 사용자 노출용 한국어 메시지 매핑 — 백엔드가 내려준 code를 키로 조회.
+// 매핑 없는 code는 호출 측에서 fallback 메시지 처리.
+export const ERROR_MESSAGES = {
+  LOGIN_FAILED:       '이메일 또는 비밀번호가 올바르지 않습니다.',
+  REQUIRED_FIELD:     '필수 항목을 입력해주세요.',
+  UNAUTHORIZED:       '로그인이 필요합니다.',
+  INVALID_EMAIL:      '이메일 형식이 올바르지 않습니다.',
+  PASSWORD_TOO_SHORT: '비밀번호는 8자 이상이어야 합니다.',
+  DUPLICATE_EMAIL:    '이미 사용 중인 이메일입니다.',
+  DUPLICATE_NICKNAME: '이미 사용 중인 닉네임입니다.',
+};
