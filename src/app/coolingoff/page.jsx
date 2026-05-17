@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -16,7 +17,9 @@ const FILTERS = [
 ];
 
 export default function CoolingOffPage() {
+  const router = useRouter();
   const [items, setItems] = useState([]);
+  const [fetchError, setFetchError] = useState(false);
   const [filter, setFilter] = useState("ongoing");
   const [completedSubFilter, setCompletedSubFilter] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -29,8 +32,13 @@ export default function CoolingOffPage() {
   useEffect(() => {
     fetch('/api/items?status=all')
       .then((r) => r.json())
-      .then((json) => { if (json.success) setItems(json.data.items); });
-  }, [shouldRefetch]);
+      .then((json) => {
+        if (json.message === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+        if (json.success) { setFetchError(false); setItems(json.data.items); }
+        else setFetchError(true);
+      })
+      .catch(() => setFetchError(true));
+  }, [shouldRefetch, router]);
 
   const pendingItems = items.filter(
     (item) => calcDaysLeft(item.expire_at) === 0 && item.status === "waiting"
@@ -88,14 +96,21 @@ export default function CoolingOffPage() {
   const handlePanelClose = () => setIsPanelOpen(false);
 
   const handleStatusChange = async (itemId, status) => {
-    await fetch(`/api/items/${itemId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    setShouldRefetch((n) => n + 1);
-    setIsPanelOpen(false);
-    setCarouselIndex(0);
+    try {
+      const res = await fetch(`/api/items/${itemId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (json.message === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      setShouldRefetch((n) => n + 1);
+    } catch {
+      setShouldRefetch((n) => n + 1);
+    } finally {
+      setIsPanelOpen(false);
+      setCarouselIndex(0);
+    }
   };
 
   const handlePrev = () => setCarouselIndex((i) => Math.max(0, i - 1));
@@ -248,11 +263,15 @@ export default function CoolingOffPage() {
         </div>
 
         {/* 카드 목록 */}
-        <div className="grid grid-cols-3 gap-4">
-          {filtered.map((item) => (
-            <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
-          ))}
-        </div>
+        {fetchError ? (
+          <p className="text-sm text-gray-400 text-center py-8">목록을 불러오지 못했어요.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            {filtered.map((item) => (
+              <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />

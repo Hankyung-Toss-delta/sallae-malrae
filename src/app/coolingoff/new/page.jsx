@@ -9,6 +9,7 @@ import Footer from "@/components/layout/Footer";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
 // Category names match DB seed order (IDs 1–6)
 const CATEGORY_OPTIONS = [
@@ -327,6 +328,7 @@ function ProductInfoCard() {
               </>
             }
             placeholder="무엇을 사고 싶나요?"
+            maxLength={100}
             className="py-3.5"
           />
         </div>
@@ -652,12 +654,13 @@ function CoolingOffDetailCard() {
       <ImpulseSlider />
 
       <div className="mt-6">
-        <FieldLabel>이걸 사고 싶은 이유가 있나요? (최대 150자) </FieldLabel>
+        <FieldLabel>이걸 사고 싶은 이유가 있나요? (최대 500자) </FieldLabel>
 
         <textarea
           id="memo"
           name="memo"
           rows="4"
+          maxLength={500}
           placeholder="지금 당장 필요한 이유를 적어보세요."
           className="w-full resize-none rounded-2xl border border-gray-300 px-5 py-4 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-[#8EAA92]"
         />
@@ -668,12 +671,24 @@ function CoolingOffDetailCard() {
   );
 }
 
+const ERROR_MESSAGES = {
+  REQUIRED_FIELD: "필수 항목을 모두 입력해주세요.",
+  INVALID_PRICE: "올바른 가격을 입력해주세요.",
+  INVALID_CATEGORY: "카테고리를 선택해주세요.",
+  INVALID_IMPULSE_SCORE: "구매 충동 점수를 확인해주세요.",
+  INVALID_EXPIRE_AT: "쿨링오프 날짜와 시간을 다시 확인해주세요.",
+  INVALID_IMAGE: "이미지는 5MB 이하의 JPG, PNG, WebP, GIF만 가능해요.",
+  UNAUTHORIZED: "세션이 만료됐어요. 다시 로그인해주세요.",
+};
+
 export default function CoolingOffNewPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     setIsSubmitting(true);
 
     try {
@@ -682,7 +697,10 @@ export default function CoolingOffNewPage() {
       const decisionPeriod = raw.get("decisionPeriod");
       const decisionHour = raw.get("decisionHour");
 
-      if (!decisionDate) return;
+      if (!decisionDate) {
+        setError("쿨링오프 날짜를 선택해주세요.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("name", raw.get("name"));
@@ -700,7 +718,17 @@ export default function CoolingOffNewPage() {
 
       if (json.success) {
         router.push("/coolingoff");
+        return;
       }
+
+      if (json.message === "UNAUTHORIZED") {
+        router.push("/auth/login");
+        return;
+      }
+
+      setError(ERROR_MESSAGES[json.message] ?? "오류가 발생했어요. 다시 시도해주세요.");
+    } catch {
+      setError("오류가 발생했어요. 다시 시도해주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -722,6 +750,8 @@ export default function CoolingOffNewPage() {
               <ProductInfoCard />
               <CoolingOffDetailCard />
             </div>
+
+            <ErrorAlert message={error} className="w-full" />
 
             <div className="flex w-full gap-3">
               <Button
