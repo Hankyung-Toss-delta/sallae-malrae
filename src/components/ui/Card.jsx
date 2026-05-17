@@ -1,14 +1,5 @@
 import Image from 'next/image'
 
-export const CATEGORY_LABELS = {
-  1: "패션/잡화",
-  2: "전자기기",
-  3: "뷰티/헬스",
-  4: "식품",
-  5: "인테리어",
-  6: "기타",
-};
-
 export function calcDaysLeft(expireAt) {
   const diff = new Date(expireAt) - new Date();
   return diff <= 0 ? 0 : Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -27,7 +18,7 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_id, expire_at, memo, impulse_score, image } =
+  const { name, price, category_name, expire_at, memo, impulse_score, image } =
     item;
 
   const daysLeft = calcDaysLeft(expire_at);
@@ -68,7 +59,7 @@ export function CoolingOffCard({ item, onClick }) {
               {name}
             </p>
             <p className="text-xs text-gray-400">
-              {CATEGORY_LABELS[category_id] ?? category_id}
+              {category_name}
             </p>
             <p className="font-bold text-[15px] text-gray-900 mt-1">
               ₩{price.toLocaleString()}

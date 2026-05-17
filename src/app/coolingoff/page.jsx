@@ -10,122 +10,27 @@ import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel
 const CAROUSEL_GAP = 16;
 const CAROUSEL_VISIBLE = 3;
 
-const INITIAL_ITEMS = [
-  {
-    id: 1,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 2,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-16T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 3,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-20T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 4,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-22T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 5,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 6,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 7,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 8,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 5,
-    image: null,
-    status: "passed",
-  },
-  {
-    id: 9,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 9,
-    image: null,
-    status: "bought",
-  },
-];
-
 const FILTERS = [
   { label: "참는중", value: "ongoing" },
   { label: "완료됨", value: "done" },
 ];
 
 export default function CoolingOffPage() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("ongoing");
   const [completedSubFilter, setCompletedSubFilter] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
+  const [shouldRefetch, setShouldRefetch] = useState(0);
   const carouselRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/items?status=all')
+      .then((r) => r.json())
+      .then((json) => { if (json.success) setItems(json.data.items); });
+  }, [shouldRefetch]);
 
   const pendingItems = items.filter(
     (item) => calcDaysLeft(item.expire_at) === 0 && item.status === "waiting"
@@ -172,7 +77,7 @@ export default function CoolingOffPage() {
   };
 
   const handleCardClick = (item) => {
-    if (selectedItem?.id === item.id && isPanelOpen) {
+    if (selectedItem?.item_id === item.item_id && isPanelOpen) {
       setIsPanelOpen(false);
       return;
     }
@@ -182,11 +87,13 @@ export default function CoolingOffPage() {
 
   const handlePanelClose = () => setIsPanelOpen(false);
 
-  const handleStatusChange = (id, status) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
-    );
-    setSelectedItem((prev) => (prev?.id === id ? { ...prev, status } : prev));
+  const handleStatusChange = async (itemId, status) => {
+    await fetch(`/api/items/${itemId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    setShouldRefetch((n) => n + 1);
     setIsPanelOpen(false);
     setCarouselIndex(0);
   };
@@ -231,7 +138,7 @@ export default function CoolingOffPage() {
             {pendingItems.length <= CAROUSEL_VISIBLE ? (
               <div className="grid grid-cols-3 gap-4">
                 {pendingItems.map((item) => (
-                  <CoolingOffCard key={item.id} item={item} onClick={handleCardClick} />
+                  <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
                 ))}
               </div>
             ) : (
@@ -254,7 +161,7 @@ export default function CoolingOffPage() {
                   >
                     {pendingItems.map((item) => (
                       <div
-                        key={item.id}
+                        key={item.item_id}
                         style={{
                           width: carouselStep > 0
                             ? `${carouselStep - CAROUSEL_GAP}px`
@@ -343,7 +250,7 @@ export default function CoolingOffPage() {
         {/* 카드 목록 */}
         <div className="grid grid-cols-3 gap-4">
           {filtered.map((item) => (
-            <CoolingOffCard key={item.id} item={item} onClick={handleCardClick} />
+            <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
           ))}
         </div>
       </section>
