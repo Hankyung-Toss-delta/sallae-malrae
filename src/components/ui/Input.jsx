@@ -33,7 +33,7 @@ export default function Input({
         aria-invalid={Boolean(error)}
         aria-describedby={describedBy}
         className={`
-          w-full rounded-xl border px-5 py-4 text-sm outline-none transition-colors
+          w-full rounded-xl border px-5 py-3 text-sm outline-none transition-colors
           placeholder:text-gray-400
           ${
             error

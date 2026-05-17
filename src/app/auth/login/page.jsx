@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import AuthCard from "@/components/auth/AuthCard";
 import Header from "@/components/layout/Header";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
 import { ERROR_MESSAGES } from "@/constants/errors";
@@ -27,6 +28,12 @@ export default function LoginPage() {
     if (isSubmitting) return;
 
     setErrorMessage("");
+
+    if (!email || !password) {
+      setErrorMessage(ERROR_MESSAGES.REQUIRED_FIELD);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -52,7 +59,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="flex min-h-screen items-center justify-center px-4 pt-20 pb-8">
       <Header variant="auth" />
 
       <AuthCard>
@@ -91,11 +98,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {errorMessage && (
-            <p className="mt-4 text-sm text-red-500" role="alert">
-              {errorMessage}
-            </p>
-          )}
+          <ErrorAlert message={errorMessage} className="mt-4" />
 
           <button
             type="submit"
