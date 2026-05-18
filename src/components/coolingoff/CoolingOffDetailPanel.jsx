@@ -1,7 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { calcDaysLeft } from "@/components/ui/Card";
 import Image from 'next/image';
 import Button from "@/components/ui/Button";
+
+const CELEBRATION_CONFIG = {
+  passed: {
+    image: '/images/cooling_off/wallet.png',
+    message: '지갑 수비 성공! 통장을 지켜냈어요.',
+    width: 300,
+    height: 300,
+  },
+  bought: {
+    image: '/images/cooling_off/piggy_bank.png',
+    message: '텅장 경보 발생! 하지만 소비는 확실한 행복이죠.',
+    width: 200,
+    height: 200,
+  },
+};
 
 export default function CoolingOffDetailPanel({
   item,
@@ -11,11 +26,49 @@ export default function CoolingOffDetailPanel({
   onDelete,
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [celebration, setCelebration] = useState(null);
   const daysLeft = item ? calcDaysLeft(item.expire_at) : 0;
   const isDecided = item?.status === "passed" || item?.status === "bought";
 
+  useEffect(() => {
+    if (!celebration) return;
+    const timer = setTimeout(() => setCelebration(null), 2500);
+    return () => clearTimeout(timer);
+  }, [celebration]);
+
   return (
     <>
+      {celebration && (
+        <>
+          <style>{`
+            @keyframes celebrationPop {
+              0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+              55%  { transform: scale(1.12) rotate(2deg); opacity: 1; }
+              75%  { transform: scale(0.96) rotate(-1deg); }
+              100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            }
+          `}</style>
+          <div
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer"
+            onClick={() => setCelebration(null)}
+          >
+          <div style={{ animation: 'celebrationPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
+            <Image
+              src={CELEBRATION_CONFIG[celebration].image}
+              alt="celebration"
+              width={CELEBRATION_CONFIG[celebration].width}
+              height={CELEBRATION_CONFIG[celebration].height}
+              className="object-contain"
+            />
+          </div>
+          <p className="mt-6 text-white text-xl font-bold text-center px-8 leading-relaxed">
+            {CELEBRATION_CONFIG[celebration].message}
+          </p>
+          <p className="mt-4 text-white/50 text-sm">탭하여 닫기</p>
+          </div>
+        </>
+      )}
+
       <div>
         <div
           className={`fixed inset-0 z-50 bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 ${
@@ -158,14 +211,14 @@ export default function CoolingOffDetailPanel({
                   <Button
                     variant="primary"
                     fullWidth
-                    onClick={() => onStatusChange(item.item_id, "PASSED")}
+                    onClick={() => { onStatusChange(item.item_id, 'PASSED'); setCelebration('passed'); }}
                   >
                     참았어요
                   </Button>
                   <Button
                     variant="neutral"
                     fullWidth
-                    onClick={() => onStatusChange(item.item_id, "BOUGHT")}
+                    onClick={() => { onStatusChange(item.item_id, 'BOUGHT'); setCelebration('bought'); }}
                   >
                     샀어요
                   </Button>
@@ -175,8 +228,6 @@ export default function CoolingOffDetailPanel({
           )}
         </div>
       </div>
-
-
     </>
   );
 }
