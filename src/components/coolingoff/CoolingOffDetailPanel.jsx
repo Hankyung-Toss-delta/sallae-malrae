@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { calcDaysLeft } from "@/components/ui/Card";
 import Image from 'next/image';
 import Button from "@/components/ui/Button";
 
@@ -28,7 +27,7 @@ export default function CoolingOffDetailPanel({
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [celebration, setCelebration] = useState(null);
-  const daysLeft = item ? calcDaysLeft(item.expire_at) : 0;
+  const daysLeft = item?.days_left ?? 0;
   const isDecided = item?.status === "passed" || item?.status === "bought";
   const onCelebrationEndRef = useRef(onCelebrationEnd);
   useEffect(() => { onCelebrationEndRef.current = onCelebrationEnd; });

@@ -10,14 +10,23 @@ export async function DELETE(request, { params }) {
 
   const id = Number((await params).id);
 
-  const rows = await query('SELECT id, user_id, status FROM items WHERE id = ?', [id]);
+  let rows;
+  try {
+    rows = await query('SELECT id, user_id, status FROM items WHERE id = ?', [id]);
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
   if (rows.length === 0) return errorResponse('ITEM_NOT_FOUND');
 
   const item = rows[0];
   if (item.user_id !== user.user_id) return errorResponse('NOT_OWNER');
   if (item.status !== ITEM_STATUS.WAITING) return errorResponse('CANNOT_DELETE_DECIDED');
 
-  await query('DELETE FROM items WHERE id = ?', [id]);
+  try {
+    await query('DELETE FROM items WHERE id = ?', [id]);
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
 
   return new Response(null, { status: 204 });
 }

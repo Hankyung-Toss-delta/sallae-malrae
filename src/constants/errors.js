@@ -38,6 +38,9 @@ export const ERRORS = {
 
   // 요청 제한
   RATE_LIMITED:           { message: 'Too many requests. Please try again later.',         status: 429 },
+
+  // 서버 내부 오류
+  SERVER_ERROR:           { message: 'An unexpected error occurred.',                      status: 500 },
 };
 
 // 사용자 노출용 한국어 메시지 매핑 — 백엔드가 내려준 code를 키로 조회.
