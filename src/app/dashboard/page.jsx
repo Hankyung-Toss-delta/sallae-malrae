@@ -30,7 +30,6 @@ function formatWon(value) {
   return new Intl.NumberFormat("ko-KR").format(value ?? 0);
 }
 
-
 function getChartBackground(items) {
   if (items.length === 0) return "#EEF1EA";
   let current = 0;
@@ -67,7 +66,9 @@ export default function DashboardPage() {
         setData(body.data);
       } catch {
         if (!cancelled) {
-          setErrorMessage("네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.");
+          setErrorMessage(
+            "네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.",
+          );
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -97,7 +98,9 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {!isLoading && !errorMessage && data && <DashboardContent data={data} />}
+          {!isLoading && !errorMessage && data && (
+            <DashboardContent data={data} />
+          )}
         </div>
       </main>
 
@@ -128,7 +131,10 @@ function DashboardContent({ data }) {
     {
       label: "성공률",
       value: `${successRate}%`,
-      hint: passedCount + summary.bought_count === 0 ? "아직 결정한 항목이 없어요" : "누적 기준",
+      hint:
+        passedCount + summary.bought_count === 0
+          ? "아직 결정한 항목이 없어요"
+          : "누적 기준",
       progress: successRate,
     },
     {
@@ -224,7 +230,9 @@ function DashboardContent({ data }) {
             className="relative flex flex-col gap-1.5 rounded-2xl border border-[#EEF1EA] bg-[#F7F8F2] px-4 py-3 shadow-[0_8px_20px_rgba(33,70,56,0.05)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-[#314639]">{item.label}</p>
+              <p className="text-sm font-semibold text-[#314639]">
+                {item.label}
+              </p>
               {item.label === "레벨" && (
                 <ShareButton user={user} summary={summary} />
               )}
@@ -263,7 +271,9 @@ function RecentItemsCard({ items }) {
   return (
     <div className="flex flex-col rounded-2xl border border-[#EEF1EA] bg-[#F7F8F2] p-4 shadow-[0_10px_28px_rgba(33,70,56,0.06)]">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-[#24352A]">쿨링오프 목록</h2>
+        <h2 className="text-base font-semibold text-[#24352A]">
+          쿨링오프 목록
+        </h2>
         <Link
           href="/coolingoff"
           className="text-sm text-[#9BA59D] transition hover:text-[#2E7D5B]"
@@ -311,15 +321,16 @@ function RecentItemsCard({ items }) {
                     {item.name}
                   </p>
                   <p className="text-xs text-[#92A094]">
-                    {item.category_name} · {daysLeft === 0 ? "오늘 마감" : `남은 ${daysLeft}일`}
+                    {item.category_name} ·{" "}
+                    {daysLeft === 0 ? "오늘 마감" : `남은 ${daysLeft}일`}
                   </p>
                   <p className="text-sm font-semibold text-[#314639]">
                     {formatWon(item.price)}원
                   </p>
                 </div>
 
-                <span className="rounded-full bg-[#FDEBEC] px-2.5 py-1 text-xs font-medium text-[#E37C89]">
-                  보류중
+                <span className="rounded-full bg-[#E8F1E9] px-2.5 py-1 text-xs font-medium text-[#5D7A62]">
+                  꾹 참는 중
                 </span>
               </div>
             );
@@ -335,7 +346,9 @@ function CategoryChartCard({ items, background }) {
 
   return (
     <div className="flex flex-col rounded-2xl border border-[#EEF1EA] bg-[#F7F8F2] p-4 shadow-[0_10px_28px_rgba(33,70,56,0.06)]">
-      <h2 className="text-base font-semibold text-[#24352A]">카테고리별 비율</h2>
+      <h2 className="text-base font-semibold text-[#24352A]">
+        카테고리별 비율
+      </h2>
 
       {isEmpty ? (
         <div className="mt-4 flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#D5DBC9] bg-white py-8 text-center">
