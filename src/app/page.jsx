@@ -302,16 +302,16 @@ export default function Home() {
               {/* 아이스큐브 데코 */}
               <div
                 aria-hidden="true"
-                className="cooling-deco absolute -top-25 -right-25 pointer-events-none"
+                className="cooling-deco absolute -top-10 -right-9 md:-top-25 md:-right-25 pointer-events-none w-[120px] h-[120px] md:w-[230px] md:h-[230px]"
               >
-                <Image src="/images/landing_page/ice_cube.png" alt="" width={230} height={230} />
+                <Image src="/images/landing_page/ice_cube.png" alt="" fill className="object-contain" />
               </div>
               {/* 온도계 데코 */}
               <div
                 aria-hidden="true"
-                className="cooling-deco absolute -bottom-25 -left-30 pointer-events-none rotate-[-15deg]"
+                className="cooling-deco absolute -bottom-8 -left-10 md:-bottom-25 md:-left-30 pointer-events-none rotate-[-15deg] w-[110px] h-[110px] md:w-[250px] md:h-[250px]"
               >
-                <Image src="/images/landing_page/thermometer.png" alt="" width={250} height={250} />
+                <Image src="/images/landing_page/thermometer.png" alt="" fill className="object-contain" />
               </div>
 
               <p className="cooling-text text-xs text-gray-400 mb-5 font-mono tracking-widest">
