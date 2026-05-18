@@ -51,7 +51,7 @@ export default function LevelShareModal({ open, onClose, user, summary }) {
     setCopyMessage("");
 
     try {
-      const res = await fetch("/api/share/token", { method: "POST" });
+      const res = await fetch("/api/share/token", { method: "GET" });
       const body = await res.json();
 
       if (!body.success) {

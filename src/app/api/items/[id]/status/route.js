@@ -57,7 +57,7 @@ export async function PATCH(request, { params }) {
       const [userRow] = await query('SELECT level FROM users WHERE id = ?', [user.user_id]);
       return successResponse(
         {
-          item: { item_id: id, status: item.status, decided_at: item.decided_at },
+          item: { item_id: id, status: item.status, decided_at: item.decided_at, days_left: 0 },
           updatedStats: {
             passed_count: Number(statsRow.passed_count),
             saved_amount: Number(statsRow.saved_amount),
@@ -124,7 +124,7 @@ export async function PATCH(request, { params }) {
 
     return successResponse(
       {
-        item: { item_id: id, status: dbStatus, decided_at: decidedAt },
+        item: { item_id: id, status: dbStatus, decided_at: decidedAt, days_left: 0 },
         updatedStats: {
           passed_count: totalPassed,
           saved_amount: totalSaved,
