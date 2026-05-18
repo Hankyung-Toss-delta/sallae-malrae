@@ -71,18 +71,28 @@ export default function Home() {
       const sections = gsap.utils.toArray(".landing-section");
 
       sections.forEach((section) => {
+        const isCooling = section.id === "cooling-off-section";
         const bg = section.querySelector(".section-bg");
         const sectionContent = section.querySelector(".section-content");
         const items = section.querySelectorAll(".section-content > *:not(.step-card-fan)");
         const stepCards = section.querySelectorAll(".step-card-item");
         const heroBills = section.querySelectorAll(".hero-bill");
+        const coolingCard = isCooling ? section.querySelector(".cooling-card") : null;
+        const coolingDecos = isCooling ? section.querySelectorAll(".cooling-deco") : [];
+        const coolingTexts = isCooling ? section.querySelectorAll(".cooling-text") : [];
         if (!bg) return;
 
         gsap.set(bg, { yPercent: 100 });
-        if (sectionContent) gsap.set(sectionContent, { opacity: 0, y: 40 });
-        gsap.set(items, { opacity: 0, y: 30 });
-        if (stepCards.length) gsap.set(stepCards, { opacity: 0, y: 150 });
-        if (heroBills.length) gsap.set(heroBills, { opacity: 0, y: 40 });
+        if (isCooling) {
+          if (coolingCard) gsap.set(coolingCard, { opacity: 0, y: 40 });
+          if (coolingDecos.length) gsap.set(coolingDecos, { opacity: 0, y: 20 });
+          if (coolingTexts.length) gsap.set(coolingTexts, { opacity: 0, y: 20 });
+        } else {
+          if (sectionContent) gsap.set(sectionContent, { opacity: 0, y: 40 });
+          gsap.set(items, { opacity: 0, y: 30 });
+          if (stepCards.length) gsap.set(stepCards, { opacity: 0, y: 150 });
+          if (heroBills.length) gsap.set(heroBills, { opacity: 0, y: 40 });
+        }
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -92,28 +102,41 @@ export default function Home() {
           },
         });
 
-        tl.to(bg, { yPercent: 0, duration: 0.6, ease: "power2.out" });
-        if (sectionContent) {
-          tl.to(sectionContent, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", clearProps: "transform" }, "+=0.1");
-        }
-        tl.to(
-          items,
-          { opacity: 1, y: 0, duration: 0.4, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
-          "+=0.1"
-        );
-        if (heroBills.length) {
+        tl.to(bg, { yPercent: 0, duration: 0.45, ease: "power2.out" });
+
+        if (isCooling) {
+          if (coolingCard) {
+            tl.to(coolingCard, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", clearProps: "transform" }, "+=0.1");
+          }
+          if (coolingTexts.length) {
+            tl.to(coolingTexts, { opacity: 1, y: 0, duration: 0.45, stagger: 0.3, ease: "power2.out", clearProps: "transform" }, "+=0.1");
+          }
+          if (coolingDecos.length) {
+            tl.to(coolingDecos, { opacity: 1, y: 0, duration: 0.45, stagger: 0.3, ease: "power2.out", clearProps: "transform" }, "+=0.1");
+          }
+        } else {
+          if (sectionContent) {
+            tl.to(sectionContent, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", clearProps: "transform" }, "+=0.1");
+          }
           tl.to(
-            heroBills,
-            { opacity: 0.75, y: 0, duration: 0.6, stagger: 0.4, ease: "power2.out", clearProps: "transform" },
-            "-=0.2"
-          );
-        }
-        if (stepCards.length) {
-          tl.to(
-            stepCards,
-            { opacity: 1, y: 0, duration: 0.5, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
+            items,
+            { opacity: 1, y: 0, duration: 0.35, stagger: 0.3, ease: "power2.out", clearProps: "transform" },
             "+=0.1"
           );
+          if (heroBills.length) {
+            tl.to(
+              heroBills,
+              { opacity: 0.75, y: 0, duration: 0.7, stagger: 0.4, ease: "power2.out", clearProps: "transform" },
+              "-=0.2"
+            );
+          }
+          if (stepCards.length) {
+            tl.to(
+              stepCards,
+              { opacity: 1, y: 0, duration: 0.5, stagger: 0.35, ease: "power2.out", clearProps: "transform" },
+              "+=0.1"
+            );
+          }
         }
       });
 
@@ -275,36 +298,36 @@ export default function Home() {
         >
           <div className="section-bg absolute inset-0" />
           <div className="section-content relative z-10 w-full max-w-4xl mx-auto px-6">
-            <div className="relative bg-white rounded-3xl px-8 py-10 border border-blue-100 shadow-2xl">
+            <div className="cooling-card relative bg-white rounded-3xl px-8 py-10 border border-blue-100 shadow-2xl">
               {/* 아이스큐브 데코 */}
               <div
                 aria-hidden="true"
-                className="absolute -top-25 -right-25 pointer-events-none"
+                className="cooling-deco absolute -top-25 -right-25 pointer-events-none"
               >
                 <Image src="/images/landing_page/ice_cube.png" alt="" width={230} height={230} />
               </div>
               {/* 온도계 데코 */}
               <div
                 aria-hidden="true"
-                className="absolute -bottom-25 -left-30 pointer-events-none rotate-[-15deg]"
+                className="cooling-deco absolute -bottom-25 -left-30 pointer-events-none rotate-[-15deg]"
               >
                 <Image src="/images/landing_page/thermometer.png" alt="" width={250} height={250} />
               </div>
 
-              <p className="text-xs text-gray-400 mb-5 font-mono tracking-widest">
+              <p className="cooling-text text-xs text-gray-400 mb-5 font-mono tracking-widest">
                 [ cooling - off ]
               </p>
-              <h2 className="text-xl md:text-4xl font-bold mb-1 leading-snug">
+              <h2 className="cooling-text text-xl md:text-4xl font-bold mb-1 leading-snug">
                 사고 나서 후회하지 말고,
               </h2>
-              <h2 className="text-xl md:text-4xl font-bold mb-8 leading-snug">
+              <h2 className="cooling-text text-xl md:text-4xl font-bold mb-8 leading-snug">
                 사기 전에&nbsp;
                 <span className="text-[#2f80e0]">
                   식히세요.
                 </span>
               </h2>
 
-              <button className="w-full py-4 bg-gray-100 text-gray-500 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+              <button className="cooling-text w-full py-4 bg-gray-100 text-gray-500 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
                 쿨링오프 경제학적 의미 설명
               </button>
             </div>
