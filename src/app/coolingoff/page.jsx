@@ -9,7 +9,6 @@ import { CoolingOffCard, calcDaysLeft } from "@/components/ui/Card";
 import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel";
 
 const CAROUSEL_GAP = 16;
-const CAROUSEL_VISIBLE = 3;
 
 const FILTERS = [
   { label: "참는중", value: "ongoing" },
@@ -26,6 +25,7 @@ export default function CoolingOffPage() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
+  const [carouselVisible, setCarouselVisible] = useState(3);
   const [shouldRefetch, setShouldRefetch] = useState(0);
   const carouselRef = useRef(null);
 
@@ -48,7 +48,7 @@ export default function CoolingOffPage() {
     (item) => calcDaysLeft(item.expire_at) === 0 && item.status === "waiting"
   );
 
-  const maxCarouselIndex = Math.max(0, pendingItems.length - CAROUSEL_VISIBLE);
+  const maxCarouselIndex = Math.max(0, pendingItems.length - carouselVisible);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -57,8 +57,10 @@ export default function CoolingOffPage() {
     const compute = () => {
       const w = el.offsetWidth;
       if (w === 0) return;
+      const visible = w < 480 ? 1 : w < 768 ? 2 : 3;
+      setCarouselVisible(visible);
       setCarouselStep(
-        (w - CAROUSEL_GAP * (CAROUSEL_VISIBLE - 1)) / CAROUSEL_VISIBLE + CAROUSEL_GAP
+        (w - CAROUSEL_GAP * (visible - 1)) / visible + CAROUSEL_GAP
       );
     };
 
@@ -157,8 +159,8 @@ export default function CoolingOffPage() {
               </span>
             </div>
 
-            {pendingItems.length <= CAROUSEL_VISIBLE ? (
-              <div className="grid grid-cols-3 gap-4">
+            {pendingItems.length <= carouselVisible ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pendingItems.map((item) => (
                   <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
                 ))}
@@ -277,7 +279,7 @@ export default function CoolingOffPage() {
             {filter === "ongoing" ? "참는 중인 항목이 없어요." : "완료된 항목이 없어요."}
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((item) => (
               <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
             ))}
