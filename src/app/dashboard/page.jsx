@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Card, { calcDaysLeft } from "@/components/ui/Card";
+import Card from "@/components/ui/Card";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import ShareButton from "./ShareButton";
 
@@ -45,6 +47,8 @@ function getChartBackground(items) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { fetchWithRefresh } = useAuth();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,7 +58,9 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const res = await fetch("/api/dashboard");
+        const res = await fetchWithRefresh("/api/dashboard");
+        if (res.status === 401) { router.push("/auth/login"); return; }
+
         const body = await res.json();
         if (cancelled) return;
 
@@ -78,7 +84,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fetchWithRefresh, router]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -297,7 +303,7 @@ function RecentItemsCard({ items }) {
       ) : (
         <div className="mt-2.5 flex flex-col gap-2">
           {items.map((item) => {
-            const daysLeft = calcDaysLeft(item.expire_at);
+            const daysLeft = item.days_left;
             return (
               <div
                 key={item.item_id}

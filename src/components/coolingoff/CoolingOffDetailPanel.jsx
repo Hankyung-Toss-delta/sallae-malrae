@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { calcDaysLeft } from "@/components/ui/Card";
 import Image from 'next/image';
 import Button from "@/components/ui/Button";
 
@@ -11,7 +10,7 @@ export default function CoolingOffDetailPanel({
   onDelete,
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const daysLeft = item ? calcDaysLeft(item.expire_at) : 0;
+  const daysLeft = item?.days_left ?? 0;
   const isDecided = item?.status === "passed" || item?.status === "bought";
 
   return (

@@ -47,25 +47,31 @@ export async function GET(request) {
 
   const { where, vals, order } = buildListQuery(user.user_id, statusParam);
 
-  const [items, countRows] = await Promise.all([
-    query(
-      `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
-              i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at
-       FROM items i JOIN categories c ON i.category_id = c.id
-       WHERE ${where} ${order}`,
-      vals,
-    ),
-    query(
-      `SELECT
-         COUNT(*) AS all_count,
-         SUM(CASE WHEN status = 'waiting' AND expire_at >= NOW() THEN 1 ELSE 0 END) AS waiting,
-         SUM(CASE WHEN status = 'bought'  THEN 1 ELSE 0 END) AS bought,
-         SUM(CASE WHEN status = 'passed'  THEN 1 ELSE 0 END) AS passed,
-         SUM(CASE WHEN status = 'waiting' AND expire_at < NOW() THEN 1 ELSE 0 END) AS expired
-       FROM items WHERE user_id = ?`,
-      [user.user_id],
-    ),
-  ]);
+  let items, countRows;
+  try {
+    [items, countRows] = await Promise.all([
+      query(
+        `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
+                i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at,
+                GREATEST(0, CEIL(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left
+         FROM items i JOIN categories c ON i.category_id = c.id
+         WHERE ${where} ${order}`,
+        vals,
+      ),
+      query(
+        `SELECT
+           COUNT(*) AS all_count,
+           SUM(CASE WHEN status = 'waiting' AND expire_at >= NOW() THEN 1 ELSE 0 END) AS waiting,
+           SUM(CASE WHEN status = 'bought'  THEN 1 ELSE 0 END) AS bought,
+           SUM(CASE WHEN status = 'passed'  THEN 1 ELSE 0 END) AS passed,
+           SUM(CASE WHEN status = 'waiting' AND expire_at < NOW() THEN 1 ELSE 0 END) AS expired
+         FROM items WHERE user_id = ?`,
+        [user.user_id],
+      ),
+    ]);
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
 
   const c = countRows[0];
 
@@ -151,7 +157,11 @@ export async function POST(request) {
     } catch {
       return errorResponse('INVALID_IMAGE');
     }
-    imagePath = await uploadImage(processed);
+    try {
+      imagePath = await uploadImage(processed);
+    } catch {
+      return errorResponse('INVALID_IMAGE');
+    }
   }
 
   const expireDate = new Date(expireAtStr);
