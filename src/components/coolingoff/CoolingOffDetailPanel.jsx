@@ -1,4 +1,4 @@
-import { calcDaysLeft } from "@/components/ui/Card";
+import { useState } from "react";
 import Image from 'next/image';
 import Button from "@/components/ui/Button";
 
@@ -7,28 +7,63 @@ export default function CoolingOffDetailPanel({
   isOpen,
   onClose,
   onStatusChange,
+  onDelete,
 }) {
-  const daysLeft = item ? calcDaysLeft(item.expire_at) : 0;
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const daysLeft = item?.days_left ?? 0;
   const isDecided = item?.status === "passed" || item?.status === "bought";
 
   return (
     <>
       <div>
         <div
-          className={`fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 ${
+          className={`fixed inset-0 z-50 bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 ${
             isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
           onClick={onClose}
         />
 
         <div
-          className={`fixed top-0 right-0 h-screen w-[480px] bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out rounded-l-3xl ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed z-[60] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-out
+            bottom-0 left-0 right-0 max-h-[90vh] rounded-t-3xl
+            md:top-0 md:right-0 md:left-auto md:bottom-auto md:h-screen md:max-h-none md:w-[480px] md:rounded-t-none md:rounded-l-3xl
+            ${isOpen ? "translate-y-0" : "translate-y-full md:translate-y-0 md:translate-x-full"}
+          `}
         >
+          {/* 삭제 확인 모달 */}
+          {isDeleteConfirmOpen && (
+            <>
+              <div
+                className="absolute inset-0 z-10 bg-black/30 backdrop-blur-[1px] rounded-t-3xl md:rounded-t-none md:rounded-l-3xl"
+                onClick={() => setIsDeleteConfirmOpen(false)}
+              />
+              <div className="absolute inset-0 z-20 flex items-center justify-center px-6">
+                <div className="w-full max-w-[320px] bg-white rounded-2xl shadow-xl p-6 flex flex-col gap-4">
+                  <div>
+                    <p className="font-bold text-gray-900 text-base">항목을 삭제할까요?</p>
+                    <p className="text-sm text-gray-400 mt-1">삭제하면 복구할 수 없어요.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" fullWidth onClick={() => setIsDeleteConfirmOpen(false)}>
+                      취소
+                    </Button>
+                    <Button
+                      variant="neutral"
+                      fullWidth
+                      className="!bg-red-50 !text-red-400 hover:!bg-red-100"
+                      onClick={() => { setIsDeleteConfirmOpen(false); onDelete(item.item_id); }}
+                    >
+                      삭제
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {item && (
             <>
-              <div className="px-7 pt-7 pb-4 flex items-start justify-between flex-shrink-0">
+              <div className="px-7 pt-7 pb-4 flex items-stretch justify-between flex-shrink-0">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{item.name}</h2>
                   <p className="text-sm text-gray-400 mt-0.5">
@@ -38,22 +73,43 @@ export default function CoolingOffDetailPanel({
                     ₩{item.price.toLocaleString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-4 mt-0.5">
-                  {daysLeft === 0 ? (
-                    <span className="bg-pink-100 text-pink-400 text-xs font-bold px-3 py-1 rounded-full">
-                      완료
-                    </span>
-                  ) : (
-                    <span className="bg-orange-100 text-orange-500 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                      D-{daysLeft}
-                    </span>
+                <div className="flex flex-col items-end flex-shrink-0 ml-4">
+                  <div className="flex items-center gap-2">
+                    {isDecided ? (
+                      <span className="bg-pink-100 text-pink-400 text-xs font-bold px-3 py-1 rounded-full">
+                        완료
+                      </span>
+                    ) : daysLeft === 0 ? (
+                      <span className="bg-orange-100 text-orange-500 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                        대기
+                      </span>
+                    ) : (
+                      <span className="bg-green-100 text-green-600 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                        D-{daysLeft}
+                      </span>
+                    )}
+                    <button
+                      onClick={onClose}
+                      className="text-gray-400 hover:text-gray-600 text-xl leading-none ml-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {!isDecided && (
+                    <button
+                      type="button"
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      className="mt-auto p-1.5 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-50 transition-colors"
+                      aria-label="삭제"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                    </button>
                   )}
-                  <button
-                    onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 text-xl leading-none ml-1"
-                  >
-                    ×
-                  </button>
                 </div>
               </div>
 
@@ -118,6 +174,8 @@ export default function CoolingOffDetailPanel({
           )}
         </div>
       </div>
+
+
     </>
   );
 }

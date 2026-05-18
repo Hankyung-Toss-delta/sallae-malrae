@@ -83,11 +83,11 @@ export default function Header({
   return (
     <>
       <header
-        className={`fixed left-0 top-0 z-50 w-full px-6 md:px-10 py-2 transition-transform duration-300 ease-in-out ${
-          visible ? "translate-y-0" : "-translate-y-full"
-        } ${className}`}
+        className={`fixed left-0 top-0 z-40 w-full px-6 md:px-10 py-2 transition-transform duration-300 ease-in-out ${
+          transparent ? "bg-transparent" : "bg-[#f7fbf8]"
+        } ${visible || mobileMenuOpen ? "translate-y-0" : "-translate-y-full"} ${className}`}
       >
-        <div className={`flex items-center justify-between gap-8 ${transparent ? "bg-transparent" : "bg-[#f7fbf8]"}`}>
+        <div className="flex items-center justify-between gap-8">
           {/* 로고 + 데스크톱 nav */}
           <div className="flex items-end gap-8">
             <Link href={resolvedLogoHref} onClick={() => setMobileMenuOpen(false)}>
@@ -151,7 +151,7 @@ export default function Header({
       {/* 모바일 메뉴 오버레이 */}
       {!isAuthPage && (
         <div
-          className={`fixed inset-0 z-40 flex flex-col pt-20 px-8 bg-[#f7fbf8] transition-transform duration-300 ease-in-out md:hidden ${
+          className={`fixed inset-0 z-30 flex flex-col pt-20 px-8 bg-[#f7fbf8] transition-transform duration-300 ease-in-out md:hidden ${
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >

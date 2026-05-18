@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { CoolingOffCard, calcDaysLeft } from "@/components/ui/Card";
+import { CoolingOffCard } from "@/components/ui/Card";
 import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel";
 
 const CAROUSEL_GAP = 16;
@@ -24,9 +24,11 @@ export default function CoolingOffPage() {
   const [completedSubFilter, setCompletedSubFilter] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isPendingExpanded, setIsPendingExpanded] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
   const [shouldRefetch, setShouldRefetch] = useState(0);
+  const [statusError, setStatusError] = useState("");
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function CoolingOffPage() {
   }, [shouldRefetch, router]);
 
   const pendingItems = items.filter(
-    (item) => calcDaysLeft(item.expire_at) === 0 && item.status === "waiting"
+    (item) => item.days_left === 0 && item.status === "waiting"
   );
 
   const maxCarouselIndex = Math.max(0, pendingItems.length - CAROUSEL_VISIBLE);
@@ -53,7 +55,6 @@ export default function CoolingOffPage() {
   useEffect(() => {
     const el = carouselRef.current;
     if (!el) return;
-
     const compute = () => {
       const w = el.offsetWidth;
       if (w === 0) return;
@@ -61,16 +62,18 @@ export default function CoolingOffPage() {
         (w - CAROUSEL_GAP * (CAROUSEL_VISIBLE - 1)) / CAROUSEL_VISIBLE + CAROUSEL_GAP
       );
     };
-
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
   }, [pendingItems.length]);
 
+  const handlePrev = () => setCarouselIndex((i) => Math.max(0, i - 1));
+  const handleNext = () => setCarouselIndex((i) => Math.min(maxCarouselIndex, i + 1));
+
   const filtered = items
     .filter((item) => {
-      const daysLeft = calcDaysLeft(item.expire_at);
+      const daysLeft = item.days_left;
       if (daysLeft === 0 && item.status === "waiting") return false;
 
       if (filter === "ongoing") return item.status === "waiting" && daysLeft > 0;
@@ -81,7 +84,7 @@ export default function CoolingOffPage() {
       }
       return false;
     })
-    .sort((a, b) => calcDaysLeft(a.expire_at) - calcDaysLeft(b.expire_at));
+    .sort((a, b) => a.days_left - b.days_left);
 
   const handleFilterChange = (value) => {
     setFilter(value);
@@ -97,9 +100,19 @@ export default function CoolingOffPage() {
     setIsPanelOpen(true);
   };
 
-  const handlePanelClose = () => setIsPanelOpen(false);
+  const handlePanelClose = () => { setIsPanelOpen(false); setStatusError(""); };
+
+  const handleDelete = async (itemId) => {
+    try {
+      await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
+    } finally {
+      setIsPanelOpen(false);
+      setShouldRefetch((n) => n + 1);
+    }
+  };
 
   const handleStatusChange = async (itemId, status) => {
+    setStatusError("");
     try {
       const res = await fetch(`/api/items/${itemId}/status`, {
         method: 'PATCH',
@@ -107,19 +120,19 @@ export default function CoolingOffPage() {
         body: JSON.stringify({ status }),
       });
       const json = await res.json();
-      if (!json.success && json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      if (!json.success) {
+        if (json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+        setStatusError("상태 변경에 실패했어요. 다시 시도해주세요.");
+        return;
+      }
       setShouldRefetch((n) => n + 1);
-    } catch {
-      setShouldRefetch((n) => n + 1);
-    } finally {
       setIsPanelOpen(false);
+      setIsPendingExpanded(false);
       setCarouselIndex(0);
+    } catch {
+      setStatusError("네트워크 오류가 발생했어요. 다시 시도해주세요.");
     }
   };
-
-  const handlePrev = () => setCarouselIndex((i) => Math.max(0, i - 1));
-  const handleNext = () =>
-    setCarouselIndex((i) => Math.min(maxCarouselIndex, i + 1));
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -158,55 +171,78 @@ export default function CoolingOffPage() {
               </span>
             </div>
 
-            {pendingItems.length <= CAROUSEL_VISIBLE ? (
-              <div className="grid grid-cols-3 gap-4">
-                {pendingItems.map((item) => (
+            {/* 모바일: 1개 + 펼치기 버튼 */}
+            <div className="md:hidden">
+              <div className="flex flex-col gap-4">
+                {(isPendingExpanded ? pendingItems : pendingItems.slice(0, 1)).map((item) => (
                   <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
                 ))}
               </div>
-            ) : (
-              <div className="relative">
-                {carouselIndex > 0 && (
-                  <button
-                    onClick={handlePrev}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
-                  >
-                    ‹
-                  </button>
-                )}
-                <div className="overflow-hidden" ref={carouselRef}>
-                  <div
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{
-                      gap: `${CAROUSEL_GAP}px`,
-                      transform: `translateX(-${carouselIndex * carouselStep}px)`,
-                    }}
-                  >
-                    {pendingItems.map((item) => (
-                      <div
-                        key={item.item_id}
-                        style={{
-                          width: carouselStep > 0
-                            ? `${carouselStep - CAROUSEL_GAP}px`
-                            : "calc(33.333% - 10.667px)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <CoolingOffCard item={item} onClick={handleCardClick} />
-                      </div>
-                    ))}
-                  </div>
+              {pendingItems.length > 1 && (
+                <button
+                  onClick={() => setIsPendingExpanded((v) => !v)}
+                  className="mt-4 mx-auto flex items-center gap-1.5 text-xs font-medium text-orange-400 hover:text-orange-500 transition-colors"
+                >
+                  {isPendingExpanded ? "접기" : `나머지 ${pendingItems.length - 1}개 보기`}
+                  <span className={`transition-transform duration-200 ${isPendingExpanded ? "rotate-180" : ""}`}>
+                    ▼
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* 데스크톱: 캐러셀 */}
+            <div className="hidden md:block">
+              {pendingItems.length <= CAROUSEL_VISIBLE ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {pendingItems.map((item) => (
+                    <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
+                  ))}
                 </div>
-                {carouselIndex < maxCarouselIndex && (
-                  <button
-                    onClick={handleNext}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            )}
+              ) : (
+                <div className="relative">
+                  {carouselIndex > 0 && (
+                    <button
+                      onClick={handlePrev}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
+                    >
+                      ‹
+                    </button>
+                  )}
+                  <div className="overflow-hidden" ref={carouselRef}>
+                    <div
+                      className="flex transition-transform duration-500 ease-in-out"
+                      style={{
+                        gap: `${CAROUSEL_GAP}px`,
+                        transform: `translateX(-${carouselIndex * carouselStep}px)`,
+                      }}
+                    >
+                      {pendingItems.map((item) => (
+                        <div
+                          key={item.item_id}
+                          style={{
+                            width: carouselStep > 0
+                              ? `${carouselStep - CAROUSEL_GAP}px`
+                              : "calc(33.333% - 10.667px)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <CoolingOffCard item={item} onClick={handleCardClick} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {carouselIndex < maxCarouselIndex && (
+                    <button
+                      onClick={handleNext}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
+                    >
+                      ›
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -278,7 +314,7 @@ export default function CoolingOffPage() {
             {filter === "ongoing" ? "참는 중인 항목이 없어요." : "완료된 항목이 없어요."}
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((item) => (
               <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
             ))}
@@ -288,11 +324,24 @@ export default function CoolingOffPage() {
 
       <Footer />
 
+      {statusError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-3 shadow-lg">
+          <p className="text-sm font-medium text-red-500">{statusError}</p>
+          <button
+            onClick={() => setStatusError("")}
+            className="text-red-300 hover:text-red-500 text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <CoolingOffDetailPanel
         item={selectedItem}
         isOpen={isPanelOpen}
         onClose={handlePanelClose}
         onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
       />
     </main>
   );

@@ -1,10 +1,5 @@
 import Image from 'next/image'
 
-export function calcDaysLeft(expireAt) {
-  const diff = new Date(expireAt) - new Date();
-  return diff <= 0 ? 0 : Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
 export default function Card({
   as: Component = "section",
   children,
@@ -18,10 +13,8 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_name, expire_at, memo, impulse_score, image } =
+  const { name, price, category_name, days_left, status, memo, impulse_score, image } =
     item;
-
-  const daysLeft = calcDaysLeft(expire_at);
 
   return (
     <div
@@ -31,13 +24,17 @@ export function CoolingOffCard({ item, onClick }) {
       <div className="bg-[#F1F1EA]">
         <div className="relative flex items-center gap-4 px-4 pt-4 pb-3">
           <div className="absolute top-3 right-3">
-            {daysLeft === 0 ? (
+            {status === "passed" || status === "bought" ? (
               <span className="bg-pink-100 text-pink-400 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 완료
               </span>
-            ) : (
+            ) : days_left === 0 ? (
               <span className="bg-orange-100 text-orange-500 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                D-{daysLeft}
+                대기
+              </span>
+            ) : (
+              <span className="bg-green-100 text-green-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                D-{days_left}
               </span>
             )}
           </div>

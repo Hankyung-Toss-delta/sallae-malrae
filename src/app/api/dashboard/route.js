@@ -7,37 +7,43 @@ export async function GET(request) {
   const user = getSessionUser(request);
   if (!user) return errorResponse('UNAUTHORIZED');
 
-  const [userRows, statsRows, recentItems, expiredRows, chartRows] = await Promise.all([
-    query('SELECT nickname, level FROM users WHERE id = ?', [user.user_id]),
-    query(
-      `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
-              COALESCE(SUM(bought_count), 0)  AS bought_count,
-              COALESCE(SUM(saved_amount), 0)  AS saved_amount
-       FROM user_monthly_stats WHERE user_id = ?`,
-      [user.user_id],
-    ),
-    query(
-      `SELECT i.id AS item_id, i.name, i.price, i.expire_at, i.image,
-              i.category_id, c.name AS category_name
-       FROM items i JOIN categories c ON i.category_id = c.id
-       WHERE i.user_id = ? AND i.status = 'waiting' AND i.expire_at >= NOW()
-       ORDER BY i.expire_at ASC LIMIT 3`,
-      [user.user_id],
-    ),
-    query(
-      `SELECT COUNT(*) AS expired_count FROM items
-       WHERE user_id = ? AND status = 'waiting' AND expire_at < NOW()`,
-      [user.user_id],
-    ),
-    query(
-      `SELECT c.name, COUNT(*) AS count
-       FROM items i JOIN categories c ON i.category_id = c.id
-       WHERE i.user_id = ? AND i.status = 'passed'
-       GROUP BY i.category_id, c.name
-       ORDER BY count DESC`,
-      [user.user_id],
-    ),
-  ]);
+  let userRows, statsRows, recentItems, expiredRows, chartRows;
+  try {
+    [userRows, statsRows, recentItems, expiredRows, chartRows] = await Promise.all([
+      query('SELECT nickname, level FROM users WHERE id = ?', [user.user_id]),
+      query(
+        `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
+                COALESCE(SUM(bought_count), 0)  AS bought_count,
+                COALESCE(SUM(saved_amount), 0)  AS saved_amount
+         FROM user_monthly_stats WHERE user_id = ?`,
+        [user.user_id],
+      ),
+      query(
+        `SELECT i.id AS item_id, i.name, i.price, i.expire_at, i.image,
+                i.category_id, c.name AS category_name,
+                GREATEST(0, CEIL(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left
+         FROM items i JOIN categories c ON i.category_id = c.id
+         WHERE i.user_id = ? AND i.status = 'waiting' AND i.expire_at >= NOW()
+         ORDER BY i.expire_at ASC LIMIT 3`,
+        [user.user_id],
+      ),
+      query(
+        `SELECT COUNT(*) AS expired_count FROM items
+         WHERE user_id = ? AND status = 'waiting' AND expire_at < NOW()`,
+        [user.user_id],
+      ),
+      query(
+        `SELECT c.name, COUNT(*) AS count
+         FROM items i JOIN categories c ON i.category_id = c.id
+         WHERE i.user_id = ? AND i.status = 'passed'
+         GROUP BY i.category_id, c.name
+         ORDER BY count DESC`,
+        [user.user_id],
+      ),
+    ]);
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
 
   const { nickname, level } = userRows[0];
   const stats = statsRows[0];

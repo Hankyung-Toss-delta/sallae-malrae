@@ -3,8 +3,8 @@ import { query } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { successResponse, errorResponse } from '@/lib/response';
 
-// POST /api/share/token — 기존 토큰 있으면 반환, 없으면 신규 발급.
-export async function POST(request) {
+// GET /api/share/token — 기존 토큰 있으면 반환, 없으면 신규 발급.
+export async function GET(request) {
   const user = getSessionUser(request);
   if (!user) return errorResponse('UNAUTHORIZED');
 
