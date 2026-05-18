@@ -142,10 +142,15 @@ export async function POST(request) {
       return errorResponse('INVALID_IMAGE');
     }
     const raw = Buffer.from(await imageFile.arrayBuffer());
-    const processed = await sharp(raw)
-      .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toBuffer();
+    let processed;
+    try {
+      processed = await sharp(raw)
+        .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch {
+      return errorResponse('INVALID_IMAGE');
+    }
     imagePath = await uploadImage(processed);
   }
 

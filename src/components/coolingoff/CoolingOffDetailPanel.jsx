@@ -1,5 +1,6 @@
 import { calcDaysLeft } from "@/components/ui/Card";
-import Image from 'next/image'
+import Image from 'next/image';
+import Button from "@/components/ui/Button";
 
 export default function CoolingOffDetailPanel({
   item,
@@ -97,18 +98,20 @@ export default function CoolingOffDetailPanel({
 
               {!isDecided && (
                 <div className="px-7 py-5 flex gap-3 flex-shrink-0">
-                  <button
+                  <Button
+                    variant="primary"
+                    fullWidth
                     onClick={() => onStatusChange(item.item_id, "PASSED")}
-                    className="flex-1 py-3 rounded-xl bg-[#7aaa8a] text-white font-semibold text-sm hover:bg-[#6a9a7a] transition-colors"
                   >
                     참았어요
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="neutral"
+                    fullWidth
                     onClick={() => onStatusChange(item.item_id, "BOUGHT")}
-                    className="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-300 transition-colors"
                   >
                     샀어요
-                  </button>
+                  </Button>
                 </div>
               )}
             </>

@@ -8,6 +8,7 @@ import Header from "@/components/layout/Header";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import Button from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ERROR_MESSAGES } from "@/constants/errors";
 
@@ -107,13 +108,9 @@ export default function LoginPage() {
 
           <ErrorAlert message={errorMessage} className="mt-4" />
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-8 inline-flex h-14 w-full cursor-pointer items-center justify-center rounded-[22px] bg-[#8FA58D] px-6 text-base font-medium text-white transition-colors hover:bg-[#81967F] disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button type="submit" disabled={isSubmitting} size="lg" fullWidth className="mt-8">
             {isSubmitting ? "로그인 중..." : "로그인하기"}
-          </button>
+          </Button>
         </form>
 
         <div className="mt-5 mb-5 flex items-center justify-center gap-2 text-xs">
