@@ -339,8 +339,19 @@ function ImageUploadBox() {
   );
 }
 
+function formatPriceWithCommas(digitsOnly) {
+  if (!digitsOnly) return "";
+  return Number(digitsOnly).toLocaleString("en-US");
+}
+
 function ProductInfoCard() {
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceDisplay, setPriceDisplay] = useState("");
+
+  const handlePriceChange = (event) => {
+    const digitsOnly = event.target.value.replace(/\D/g, "");
+    setPriceDisplay(formatPriceWithCommas(digitsOnly));
+  };
 
   return (
     <Card className="p-6 sm:p-7">
@@ -366,14 +377,17 @@ function ProductInfoCard() {
           <Input
             id="price"
             name="price"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            value={priceDisplay}
+            onChange={handlePriceChange}
             label={
               <>
                 가격 <span className="text-red-500">*</span>
               </>
             }
-            placeholder="320000"
-            className="py-3.5 pr-10 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            placeholder="320,000"
+            className="py-3.5 pr-10"
           />
 
           <span className="pointer-events-none absolute bottom-[15px] right-4 text-sm text-gray-400">
@@ -810,7 +824,7 @@ export default function CoolingOffNewPage() {
 
       const formData = new FormData();
       formData.append("name", raw.get("name"));
-      formData.append("price", raw.get("price"));
+      formData.append("price", String(raw.get("price")).replace(/,/g, ""));
       formData.append("category_id", raw.get("category_id"));
       formData.append("impulse_score", raw.get("impulse_score"));
       formData.append("expire_at", buildExpireAt(decisionDate, decisionPeriod, decisionHour));
