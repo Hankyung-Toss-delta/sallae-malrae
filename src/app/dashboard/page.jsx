@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Card from "@/components/ui/Card";
+import Card, { calcDaysLeft } from "@/components/ui/Card";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import ShareButton from "./ShareButton";
 
@@ -30,11 +30,6 @@ function formatWon(value) {
   return new Intl.NumberFormat("ko-KR").format(value ?? 0);
 }
 
-function getDaysLeft(expireAt) {
-  const diff = new Date(expireAt) - new Date();
-  if (diff <= 0) return 0;
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
 
 function getChartBackground(items) {
   if (items.length === 0) return "#EEF1EA";
@@ -290,7 +285,7 @@ function RecentItemsCard({ items }) {
       ) : (
         <div className="mt-2.5 flex flex-col gap-2">
           {items.map((item) => {
-            const daysLeft = getDaysLeft(item.expire_at);
+            const daysLeft = calcDaysLeft(item.expire_at);
             return (
               <div
                 key={item.item_id}
