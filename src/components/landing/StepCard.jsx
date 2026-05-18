@@ -19,6 +19,7 @@ export default function StepCard({ step, title, subtitle, description, isActive,
             src={imageSrc}
             alt=""
             fill
+            sizes="360px"
             className="object-contain"
           />
         </div>
