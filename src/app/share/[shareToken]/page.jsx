@@ -95,8 +95,8 @@ function ShareContent({ data }) {
 
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <CountCard label="참은 횟수" value={passedCount} total={total} accent />
-          <CountCard label="구매 횟수" value={boughtCount} total={total} />
+          <CountCard label="이번 달 참은 횟수" value={passedCount} total={total} accent />
+          <CountCard label="이번 달 구매 횟수" value={boughtCount} total={total} />
         </div>
 
         <SuccessRateCard
@@ -166,10 +166,10 @@ function SuccessRateCard({ rate, passed, total }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#E4EBE0] bg-white p-5">
       <div>
-        <p className="text-sm font-medium text-[#55655A]">쿨링오프 성공률</p>
+        <p className="text-sm font-medium text-[#55655A]">이번 달 쿨링오프 성공률</p>
         <p className="mt-2 text-3xl font-bold text-[#4A8A72]">{rate}%</p>
         <p className="mt-1 text-xs text-[#9BA59D]">
-          {total.toLocaleString("ko-KR")}번 중 {passed.toLocaleString("ko-KR")}번 참았어요
+          이번 달 {total.toLocaleString("ko-KR")}번 중 {passed.toLocaleString("ko-KR")}번 참았어요
         </p>
       </div>
 

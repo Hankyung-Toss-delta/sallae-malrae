@@ -59,7 +59,10 @@ export default function DashboardPage() {
     (async () => {
       try {
         const res = await fetchWithRefresh("/api/dashboard");
-        if (res.status === 401) { router.push("/auth/login"); return; }
+        if (res.status === 401) {
+          router.push("/auth/login");
+          return;
+        }
 
         const body = await res.json();
         if (cancelled) return;
@@ -125,22 +128,22 @@ function DashboardContent({ data }) {
 
   const summaryCards = [
     {
-      label: "참은 횟수",
+      label: "이번 달 참은 횟수",
       value: passedCount.toLocaleString("ko-KR"),
-      hint: passedCount === 0 ? "아직 기록이 없어요" : "누적 기준",
+      hint: passedCount === 0 ? "아직 기록이 없어요" : "이번 달 기준",
     },
     {
-      label: "절약 금액",
+      label: "이번 달 절약 금액",
       value: formatWon(savedAmount),
       hint: "단위 (원)",
     },
     {
-      label: "성공률",
+      label: "이번 달 성공률",
       value: `${successRate}%`,
       hint:
         passedCount + summary.bought_count === 0
           ? "아직 결정한 항목이 없어요"
-          : "누적 기준",
+          : "이번 달 기준",
       progress: successRate,
     },
     {
@@ -158,17 +161,17 @@ function DashboardContent({ data }) {
 
   return (
     <Card className="flex flex-col gap-3 border border-white/70 p-4 shadow-[0_24px_60px_rgba(33,70,56,0.10)] sm:p-5 lg:gap-4 lg:p-6">
-      <div>
-        <h1 className="text-[clamp(1.5rem,2vw,1.9rem)] font-bold tracking-tight text-[#1D2A21]">
+      <div className="pl-2 sm:pl-3">
+        <h1 className="mt-2 text-[clamp(1.5rem,2vw,1.9rem)] font-bold tracking-tight text-[#1D2A21]">
           안녕하세요, {user.nickname}님
         </h1>
 
-        <p className="mt-1 text-sm text-[#6B766F]">
+        <p className="mt-1 mb-12 text-sm text-[#6B766F]">
           {isEmpty ? (
-            <>아직 등록한 항목이 없어요. 첫 항목을 등록해보세요.</>
+            <>이번 달에 등록한 항목이 없어요. 첫 항목을 등록해보세요.</>
           ) : (
             <>
-              벌써{" "}
+              이번 달에{" "}
               <span className="font-semibold text-[#2E7D5B]">
                 {formatWon(savedAmount)}원
               </span>
@@ -265,7 +268,7 @@ function DashboardContent({ data }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[1.12fr_0.88fr]">
+      <div className="mb-6 grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[1.12fr_0.88fr]">
         <RecentItemsCard items={recentItems} />
         <CategoryChartCard items={chartItems} background={chartBackground} />
       </div>
@@ -353,13 +356,13 @@ function CategoryChartCard({ items, background }) {
   return (
     <div className="flex flex-col rounded-2xl border border-[#EEF1EA] bg-[#F7F8F2] p-4 shadow-[0_10px_28px_rgba(33,70,56,0.06)]">
       <h2 className="text-base font-semibold text-[#24352A]">
-        카테고리별 비율
+        이번 달 카테고리 비율
       </h2>
 
       {isEmpty ? (
         <div className="mt-4 flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#D5DBC9] bg-white py-8 text-center">
           <p className="text-sm text-[#6B766F]">
-            참은 항목이 쌓이면 카테고리별 비율을 보여드릴게요.
+            이번 달에 참은 항목이 쌓이면 카테고리 비율을 보여드릴게요.
           </p>
         </div>
       ) : (
