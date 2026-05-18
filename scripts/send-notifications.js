@@ -10,5 +10,5 @@ try {
   process.exit(1);
 }
 
-await pool.end();
+await pool.end().catch(() => {});
 process.exit(0);
