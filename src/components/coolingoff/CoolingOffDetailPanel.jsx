@@ -76,12 +76,16 @@ export default function CoolingOffDetailPanel({
                 </div>
                 <div className="flex flex-col items-end flex-shrink-0 ml-4">
                   <div className="flex items-center gap-2">
-                    {daysLeft === 0 ? (
+                    {isDecided ? (
                       <span className="bg-pink-100 text-pink-400 text-xs font-bold px-3 py-1 rounded-full">
                         완료
                       </span>
-                    ) : (
+                    ) : daysLeft === 0 ? (
                       <span className="bg-orange-100 text-orange-500 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                        대기
+                      </span>
+                    ) : (
+                      <span className="bg-green-100 text-green-600 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
                         D-{daysLeft}
                       </span>
                     )}
