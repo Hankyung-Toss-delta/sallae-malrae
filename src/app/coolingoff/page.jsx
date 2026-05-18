@@ -130,6 +130,9 @@ export default function CoolingOffPage() {
         {/* 메인 헤더 */}
         <div className="flex items-start justify-between mb-8">
           <div>
+            <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#8FA58D]">
+              COOLING OFF
+            </p>
             <h1 className="text-3xl font-bold text-gray-900">내 쿨링오프 목록</h1>
             <p className="text-sm text-gray-400 mt-1">
               지금 말고 내일 생각해도 늦지 않아요.
