@@ -147,6 +147,7 @@ export default function CoolingOffPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
+
       <Header activeMenu="coolingoff" />
 
       <section className="flex-1 max-w-[1100px] mx-auto px-6 py-30 w-full">

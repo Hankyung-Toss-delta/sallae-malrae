@@ -12,6 +12,7 @@ import Input from "@/components/ui/Input";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import { ERROR_MESSAGES } from "@/constants/errors";
 import { CATEGORY_OPTIONS } from "@/constants/categories";
+import RegisterSuccessModal from "./RegisterSuccessModal";
 
 const CALENDAR_WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -48,7 +49,9 @@ function buildExpireAt(dateStr, period, hour) {
   } else {
     hour24 = h === 12 ? 12 : h + 12;
   }
-  return new Date(`${dateStr}T${String(hour24).padStart(2, "0")}:00:00+09:00`).toISOString();
+  return new Date(
+    `${dateStr}T${String(hour24).padStart(2, "0")}:00:00+09:00`,
+  ).toISOString();
 }
 
 function FieldLabel({ children, required = true }) {
@@ -174,15 +177,19 @@ function DropdownField({
                     aria-selected={isSelected}
                     onClick={() => {
                       if (disabledValues.includes(option)) return;
-                      if (isControlled) { onChangeProp?.(option); } else { setInternalValue(option); }
+                      if (isControlled) {
+                        onChangeProp?.(option);
+                      } else {
+                        setInternalValue(option);
+                      }
                       setIsOpen(false);
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                       disabledValues.includes(option)
                         ? "text-[#C5CCC3] cursor-not-allowed"
                         : isSelected
-                        ? "bg-[#E8F1E9] text-[#38503E]"
-                        : "text-[#314231] hover:bg-[#F6FAF5]"
+                          ? "bg-[#E8F1E9] text-[#38503E]"
+                          : "text-[#314231] hover:bg-[#F6FAF5]"
                     }`}
                   >
                     <span>{suffix ? `${option}${suffix}` : option}</span>
@@ -230,10 +237,19 @@ function PageTitle() {
   );
 }
 
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
 function ImageUploadBox() {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [fileName, setFileName] = useState("");
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     return () => {
@@ -249,6 +265,20 @@ function ImageUploadBox() {
     if (!nextFile) {
       return;
     }
+
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(nextFile.type)) {
+      setImageError("JPG, PNG, WEBP, GIF 형식만 올릴 수 있어요.");
+      event.target.value = "";
+      return;
+    }
+
+    if (nextFile.size > MAX_IMAGE_SIZE_BYTES) {
+      setImageError("이미지는 5MB 이하만 올릴 수 있어요.");
+      event.target.value = "";
+      return;
+    }
+
+    setImageError("");
 
     const nextPreviewUrl = URL.createObjectURL(nextFile);
 
@@ -288,9 +318,14 @@ function ImageUploadBox() {
             사진 업로드
           </button>
 
-          <p className="text-xs text-[#8C968A]">
-            {fileName ||
-              "선택 항목이에요. 이미지를 고르면 여기에 이름이 보여요."}
+          <p
+            className={`text-xs ${
+              imageError ? "text-[#D96C6C] font-medium" : "text-[#8C968A]"
+            }`}
+          >
+            {imageError ||
+              fileName ||
+              "5MB 이하 JPG·PNG·WEBP·GIF 이미지를 올릴 수 있어요."}
           </p>
         </div>
         {previewUrl && (
@@ -310,8 +345,19 @@ function ImageUploadBox() {
   );
 }
 
+function formatPriceWithCommas(digitsOnly) {
+  if (!digitsOnly) return "";
+  return Number(digitsOnly).toLocaleString("en-US");
+}
+
 function ProductInfoCard() {
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceDisplay, setPriceDisplay] = useState("");
+
+  const handlePriceChange = (event) => {
+    const digitsOnly = event.target.value.replace(/\D/g, "");
+    setPriceDisplay(formatPriceWithCommas(digitsOnly));
+  };
 
   return (
     <Card className="p-6 sm:p-7">
@@ -337,14 +383,17 @@ function ProductInfoCard() {
           <Input
             id="price"
             name="price"
-            type="number"
+            type="text"
+            inputMode="numeric"
+            value={priceDisplay}
+            onChange={handlePriceChange}
             label={
               <>
                 가격 <span className="text-red-500">*</span>
               </>
             }
-            placeholder="320000"
-            className="py-3.5 pr-10 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            placeholder="320,000"
+            className="py-3.5 pr-10"
           />
 
           <span className="pointer-events-none absolute bottom-[15px] right-4 text-sm text-gray-400">
@@ -358,7 +407,11 @@ function ProductInfoCard() {
         <input
           name="category_id"
           type="hidden"
-          value={selectedCategory ? String(CATEGORY_OPTIONS.indexOf(selectedCategory) + 1) : ""}
+          value={
+            selectedCategory
+              ? String(CATEGORY_OPTIONS.indexOf(selectedCategory) + 1)
+              : ""
+          }
         />
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -414,13 +467,15 @@ function CoolingOffTimePicker({ minHour24 }) {
   const disabledPeriods =
     minHour24 !== null
       ? TIME_PERIOD_OPTIONS.filter((p) =>
-          TIME_HOUR_OPTIONS.every((h) => toHour24(p, h) < minHour24)
+          TIME_HOUR_OPTIONS.every((h) => toHour24(p, h) < minHour24),
         )
       : [];
 
   const disabledHours =
     minHour24 !== null
-      ? TIME_HOUR_OPTIONS.filter((h) => toHour24(effectiveTime.period, h) < minHour24)
+      ? TIME_HOUR_OPTIONS.filter(
+          (h) => toHour24(effectiveTime.period, h) < minHour24,
+        )
       : [];
 
   return (
@@ -434,7 +489,7 @@ function CoolingOffTimePicker({ minHour24 }) {
         </label>
 
         <span className="text-xs text-[#9AA49A]">
-          나를 가장 잘 말릴 수 있는 시간으로 정해보세요.
+          차분히 다시 결정할 수 있는 시간으로 골라보세요.
         </span>
       </div>
 
@@ -466,7 +521,20 @@ function CoolingOffTimePicker({ minHour24 }) {
   );
 }
 
-const MONTH_NAMES = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+const MONTH_NAMES = [
+  "1월",
+  "2월",
+  "3월",
+  "4월",
+  "5월",
+  "6월",
+  "7월",
+  "8월",
+  "9월",
+  "10월",
+  "11월",
+  "12월",
+];
 
 function getMinHour24() {
   const now = new Date();
@@ -486,7 +554,9 @@ function CoolingOffPeriodPicker() {
   const [viewMonth, setViewMonth] = useState(defaultDate.getMonth());
   const [selectedDay, setSelectedDay] = useState(defaultDate.getDate());
 
-  const selectedDateStr = selectedDay ? formatDateStr(viewYear, viewMonth, selectedDay) : "";
+  const selectedDateStr = selectedDay
+    ? formatDateStr(viewYear, viewMonth, selectedDay)
+    : "";
   const calendarWeeks = getCalendarWeeks(viewYear, viewMonth);
 
   const todayYear = todayDate.getFullYear();
@@ -507,7 +577,8 @@ function CoolingOffPeriodPicker() {
     viewMonth === todayMonth &&
     selectedDay === todayDate.getDate();
 
-  const canGoPrev = viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
+  const canGoPrev =
+    viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
   const canGoNext = (() => {
     const nextYear = viewMonth === 11 ? viewYear + 1 : viewYear;
     const nextMonth = viewMonth === 11 ? 0 : viewMonth + 1;
@@ -515,14 +586,22 @@ function CoolingOffPeriodPicker() {
   })();
 
   const handlePrev = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
-    else { setViewMonth((m) => m - 1); }
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear((y) => y - 1);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
     setSelectedDay(null);
   };
 
   const handleNext = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
-    else { setViewMonth((m) => m + 1); }
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear((y) => y + 1);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
     setSelectedDay(null);
   };
 
@@ -587,35 +666,85 @@ function CoolingOffPeriodPicker() {
         </div>
 
         <div className="mt-2.5 grid grid-cols-7 gap-1.5">
-          {calendarWeeks.flat().map((day, index) =>
-            day ? (
+          {calendarWeeks.flat().map((day, index) => {
+            if (!day) {
+              return (
+                <div
+                  key={`empty-${index}`}
+                  aria-hidden="true"
+                  className="h-10 rounded-xl border border-transparent"
+                />
+              );
+            }
+
+            const isToday =
+              viewYear === todayYear &&
+              viewMonth === todayMonth &&
+              day === todayDate.getDate();
+            const isSelected = day === selectedDay;
+            const disabled = isDisabled(day);
+
+            return (
               <button
                 key={`${day}-${index}`}
                 type="button"
-                disabled={isDisabled(day)}
-                aria-pressed={day === selectedDay}
+                disabled={disabled}
+                aria-pressed={isSelected}
                 onClick={() => setSelectedDay(day)}
-                className={`flex h-10 items-center justify-center rounded-xl border text-sm font-medium transition-colors ${
-                  day === selectedDay
-                    ? "border-[#8FA58D] bg-[#E8F1E9] text-[#38503E]"
-                    : isDisabled(day)
-                    ? "border-[#D6DDD4] bg-white text-[#C5CCC3] cursor-not-allowed"
-                    : "border-[#D6DDD4] bg-white text-[#3B443B] hover:bg-[#F6FAF5]"
+                className={`relative flex h-10 items-center justify-center rounded-xl text-sm font-medium transition-colors disabled:cursor-default ${
+                  isSelected
+                    ? "bg-[#E8F1E9] text-[#38503E]"
+                    : disabled
+                      ? "text-[#C5CCC3]"
+                      : "text-[#3B443B] hover:bg-[#F6FAF5]"
                 }`}
               >
                 {day}
+                {isToday && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
+                      isSelected ? "bg-[#38503E]" : "bg-[#6D876D]"
+                    }`}
+                  />
+                )}
               </button>
-            ) : (
-              <div
-                key={`empty-${index}`}
-                aria-hidden="true"
-                className="h-10 rounded-xl border border-transparent"
-              />
-            ),
-          )}
+            );
+          })}
         </div>
 
-        <CoolingOffTimePicker minHour24={isSelectedToday ? todayMinHour24 : null} />
+        {selectedDay && (
+          <div className="mt-4 rounded-xl bg-[#F8F1E4] px-4 py-3">
+            <p className="text-center text-sm text-[#7E6438]">
+              {isSelectedToday ? (
+                <span className="font-semibold text-[#5C4827]">
+                  오늘 안에 다시 생각해볼게요
+                </span>
+              ) : (
+                <>
+                  오늘부터{" "}
+                  <span className="font-semibold text-[#5C4827]">
+                    {Math.round(
+                      (new Date(viewYear, viewMonth, selectedDay).getTime() -
+                        todayDate.getTime()) /
+                        (24 * 60 * 60 * 1000),
+                    )}
+                    일간
+                  </span>{" "}
+                  멈춰볼게요
+                  <span className="ml-1 text-[#A89878]">
+                    ({MONTH_NAMES[todayMonth]} {todayDate.getDate()}일 →{" "}
+                    {MONTH_NAMES[viewMonth]} {selectedDay}일)
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+        )}
+
+        <CoolingOffTimePicker
+          minHour24={isSelectedToday ? todayMinHour24 : null}
+        />
       </div>
     </div>
   );
@@ -699,6 +828,49 @@ function ImpulseSlider() {
   );
 }
 
+const MEMO_MAX_LENGTH = 500;
+
+function MemoField() {
+  const [memo, setMemo] = useState("");
+  const length = memo.length;
+  const isNearLimit = length >= MEMO_MAX_LENGTH * 0.9;
+  const isAtLimit = length >= MEMO_MAX_LENGTH;
+
+  return (
+    <div className="mt-6">
+      <FieldLabel>이걸 사고 싶은 이유가 있나요?</FieldLabel>
+
+      <div className="relative">
+        <textarea
+          id="memo"
+          name="memo"
+          rows="4"
+          maxLength={MEMO_MAX_LENGTH}
+          value={memo}
+          onChange={(event) => setMemo(event.target.value)}
+          placeholder="지금 당장 필요한 이유를 적어보세요."
+          aria-describedby="memo-counter"
+          className="w-full resize-none rounded-2xl border border-gray-300 px-5 py-4 pb-9 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-[#8EAA92]"
+        />
+
+        <p
+          id="memo-counter"
+          aria-live="polite"
+          className={`pointer-events-none absolute bottom-3 right-4 text-xs tabular-nums ${
+            isAtLimit
+              ? "text-[#D96C6C] font-medium"
+              : isNearLimit
+                ? "text-[#A8763A]"
+                : "text-[#9AA49A]"
+          }`}
+        >
+          {length}/{MEMO_MAX_LENGTH}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function CoolingOffDetailCard() {
   return (
     <Card className="p-6 sm:p-7">
@@ -706,29 +878,18 @@ function CoolingOffDetailCard() {
 
       <ImpulseSlider />
 
-      <div className="mt-6">
-        <FieldLabel>이걸 사고 싶은 이유가 있나요? (최대 500자) </FieldLabel>
-
-        <textarea
-          id="memo"
-          name="memo"
-          rows="4"
-          maxLength={500}
-          placeholder="지금 당장 필요한 이유를 적어보세요."
-          className="w-full resize-none rounded-2xl border border-gray-300 px-5 py-4 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-[#8EAA92]"
-        />
-      </div>
+      <MemoField />
 
       <CoolingOffPeriodPicker />
     </Card>
   );
 }
 
-
 export default function CoolingOffNewPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -748,10 +909,13 @@ export default function CoolingOffNewPage() {
 
       const formData = new FormData();
       formData.append("name", raw.get("name"));
-      formData.append("price", raw.get("price"));
+      formData.append("price", String(raw.get("price")).replace(/,/g, ""));
       formData.append("category_id", raw.get("category_id"));
       formData.append("impulse_score", raw.get("impulse_score"));
-      formData.append("expire_at", buildExpireAt(decisionDate, decisionPeriod, decisionHour));
+      formData.append(
+        "expire_at",
+        buildExpireAt(decisionDate, decisionPeriod, decisionHour),
+      );
       const memo = raw.get("memo");
       if (memo) formData.append("memo", memo);
       const image = raw.get("image");
@@ -761,16 +925,18 @@ export default function CoolingOffNewPage() {
       const json = await res.json();
 
       if (json.success) {
-        router.push("/coolingoff");
+        setShowSuccessModal(true);
         return;
       }
 
-      if (json.code === 'UNAUTHORIZED') {
+      if (json.code === "UNAUTHORIZED") {
         router.push("/auth/login");
         return;
       }
 
-      setError(ERROR_MESSAGES[json.code] ?? "오류가 발생했어요. 다시 시도해주세요.");
+      setError(
+        ERROR_MESSAGES[json.code] ?? "오류가 발생했어요. 다시 시도해주세요.",
+      );
     } catch {
       setError("오류가 발생했어요. 다시 시도해주세요.");
     } finally {
@@ -818,6 +984,11 @@ export default function CoolingOffNewPage() {
       </section>
 
       <Footer />
+
+      <RegisterSuccessModal
+        open={showSuccessModal}
+        onConfirm={() => router.push("/coolingoff")}
+      />
     </main>
   );
 }
