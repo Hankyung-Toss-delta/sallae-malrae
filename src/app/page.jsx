@@ -75,7 +75,7 @@ export default function Home() {
         const bg = section.querySelector(".section-bg");
         const sectionContent = section.querySelector(".section-content");
         const items = section.querySelectorAll(".section-content > *:not(.step-card-fan)");
-        const stepCards = section.querySelectorAll(".step-card-item");
+        const stepCards = [...section.querySelectorAll(".step-card-item")].filter(el => el.offsetParent !== null);
         const heroBills = section.querySelectorAll(".hero-bill");
         const coolingCard = isCooling ? section.querySelector(".cooling-card") : null;
         const coolingDecos = isCooling ? section.querySelectorAll(".cooling-deco") : [];
@@ -131,10 +131,11 @@ export default function Home() {
             );
           }
           if (stepCards.length) {
+            const isMobile = window.innerWidth < 768;
             tl.to(
               stepCards,
-              { opacity: 1, y: 0, duration: 0.5, stagger: 0.35, ease: "power2.out", clearProps: "transform" },
-              "+=0.1"
+              { opacity: 1, y: 0, duration: 0.5, stagger: isMobile ? 0 : 0.35, ease: "power2.out", clearProps: "transform" },
+              "+=0.15"
             );
           }
         }
@@ -304,14 +305,14 @@ export default function Home() {
                 aria-hidden="true"
                 className="cooling-deco absolute -top-10 -right-9 md:-top-25 md:-right-25 pointer-events-none w-[120px] h-[120px] md:w-[230px] md:h-[230px]"
               >
-                <Image src="/images/landing_page/ice_cube.png" alt="" fill className="object-contain" />
+                <Image src="/images/landing_page/ice_cube.png" alt="" fill className="object-contain" sizes="(max-width: 768px) 110px, 230px" />
               </div>
               {/* 온도계 데코 */}
               <div
                 aria-hidden="true"
                 className="cooling-deco absolute -bottom-8 -left-10 md:-bottom-25 md:-left-30 pointer-events-none rotate-[-15deg] w-[110px] h-[110px] md:w-[250px] md:h-[250px]"
               >
-                <Image src="/images/landing_page/thermometer.png" alt="" fill className="object-contain" />
+                <Image src="/images/landing_page/thermometer.png" alt="" fill className="object-contain" sizes="(max-width: 768px) 110px, 250px" />
               </div>
 
               <p className="cooling-text text-xs text-gray-400 mb-5 font-mono tracking-widest">
@@ -337,20 +338,31 @@ export default function Home() {
         {/* ── 4. 3단계 ── */}
         <section
           id="steps"
-          className="landing-section snap-section relative min-h-screen flex items-center justify-center overflow-hidden"
+          className="landing-section snap-section relative min-h-screen flex items-center justify-center md:overflow-hidden"
         >
           <div className="section-bg absolute inset-0" />
           <div className="section-content relative z-10 w-full px-6">
-            <div className="text-center mb-16 gap-4 flex flex-col">
+            <div className="text-center mb-10 md:mb-16 gap-4 flex flex-col">
               <h2 className="text-2xl md:text-5xl font-extrabold text-[#1a3a2e] mb-2">
                 충동구매를 막는 3단계
               </h2>
               <p className="text-2xl text-gray-500">뜨거운 마음, 차가운 결정으로</p>
             </div>
 
-            {/* 카드 팬 레이아웃 */}
+            {/* 모바일: 가로 스크롤 캐러셀 */}
+            <div className="step-card-fan md:hidden flex overflow-x-auto snap-x snap-mandatory gap-5 -mx-6 px-4 pb-6">
+              {STEPS.map((step) => (
+                <div key={step.step} className="step-card-item snap-center flex-shrink-0 relative" style={{ width: "270px", height: "330px" }}>
+                  <div className="absolute" style={{ transform: "scale(0.75)", transformOrigin: "top left", width: "360px", height: "440px" }}>
+                    <StepCard {...step} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 데스크톱: 팬 레이아웃 */}
             <div
-              className="step-card-fan relative flex justify-center items-center mx-auto"
+              className="step-card-fan hidden md:flex relative justify-center items-center mx-auto"
               style={{ height: "480px" }}
             >
               {STEPS.map((step, i) => {
@@ -397,7 +409,7 @@ export default function Home() {
             </p>
             <h2 className="text-2xl md:text-6xl font-black text-[#89928F] mb-12 gap-4 flex items-center justify-center gap-2 flex-wrap">
               딱
-              <span className="inline-flex items-center rounded-2xl px-5 py-1.5 mt-2 shadow-2xl shadow-gray-500/80 bg-[#F1F1EA] rotate-[-10deg] text-[#4A9F7E]">
+              <span className="inline-flex text-3xl md:text-6xl items-center rounded-xl md:rounded-2xl px-3 md:px-5 py-1.5 mt-2 shadow-2xl shadow-gray-500/80 bg-[#F1F1EA] rotate-[-10deg] text-[#4A9F7E]">
                 {day}일
               </span>
               만 참아볼까요?
