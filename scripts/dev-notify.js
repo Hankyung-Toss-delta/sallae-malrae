@@ -3,6 +3,7 @@
 // DRY_RUN 모드: DRY_RUN=1 node --env-file=.env.local scripts/dev-notify.js "2026-05-17T03:00:00"
 
 import { sendDueNotifications } from '../src/lib/notifier.js';
+import pool from '../src/lib/db.js';
 
 const arg = process.argv[2];
 const now = arg ? new Date(arg) : new Date();
@@ -17,8 +18,11 @@ console.log(`[dev-notify] 기준 시각: ${now.toISOString()} (DRY_RUN=${process
 try {
   const result = await sendDueNotifications(now);
   console.log(`[dev-notify] 완료 — before_24h: ${result.before24h}, expire: ${result.expire}`);
-  process.exit(0);
 } catch (err) {
   console.error('[dev-notify] 오류:', err);
+  await pool.end().catch(() => {});
   process.exit(1);
 }
+
+await pool.end().catch(() => {});
+process.exit(0);
