@@ -5,22 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import ErrorAlert from "@/components/ui/ErrorAlert";
-
-const LEVEL_TITLE = {
-  1: "이제 시작한 짠돌이",
-  2: "감을 잡은 짠돌이",
-  3: "흐름을 타는 짠돌이",
-  4: "잘하고 있는 짠돌이",
-  5: "전설의 짠돌이",
-};
-
-const LEVEL_DESCRIPTION = {
-  1: "충동구매를 줄여보려는\n첫 걸음을 떼셨어요!",
-  2: "조금씩 절약의 감을\n잡아가고 있어요!",
-  3: "절약 습관이\n점점 자리잡고 있어요!",
-  4: "충동구매를 잘 막아내는\n절약 고수예요!",
-  5: "충동구매를 꾸준히 참아낸\n절약의 달인이에요!",
-};
+import { getLevelMeta } from "@/lib/level";
 
 export default function SharePage({ params }) {
   const { shareToken } = use(params);
@@ -59,13 +44,22 @@ export default function SharePage({ params }) {
   }, [shareToken]);
 
   return (
-    <div className="min-h-screen bg-[#F1F7F0] px-4 py-10 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen justify-center bg-[#F1F7F0] px-3 pt-2 pb-10 sm:px-6 sm:pt-4 sm:pb-14 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
-        <p className="mb-4 text-xs font-medium text-[#8FA58D]">
-          레벨 공유 페이지 (링크로 공유되는 페이지)
-        </p>
+        <div className="rounded-3xl bg-[#EEF6EE] p-4 sm:p-8">
+          <div className="mb-6 flex justify-center sm:justify-start">
+            <Link href="/" className="inline-flex">
+              <Image
+                src="/images/logo.png"
+                alt="살래말래"
+                width={200}
+                height={80}
+                priority
+                className="h-[56px] w-auto sm:h-[64px]"
+              />
+            </Link>
+          </div>
 
-        <div className="rounded-3xl bg-[#EEF6EE] p-6 sm:p-8">
           {isLoading && <ShareSkeleton />}
 
           {!isLoading && errorMessage && (
@@ -83,8 +77,7 @@ export default function SharePage({ params }) {
 
 function ShareContent({ data }) {
   const { nickname, level, summary } = data;
-  const title = LEVEL_TITLE[level] ?? "꾸준한 짠돌이";
-  const description = LEVEL_DESCRIPTION[level] ?? "꾸준히 절약하고 있어요!";
+  const { name: title, description } = getLevelMeta(level);
 
   const passedCount = summary.passed_count;
   const boughtCount = summary.bought_count;
@@ -101,19 +94,8 @@ function ShareContent({ data }) {
       />
 
       <div className="flex flex-col gap-4">
-        <div className="flex justify-center lg:justify-start">
-          <Image
-            src="/images/logo.png"
-            alt="살래말래"
-            width={200}
-            height={80}
-            priority
-            className="h-[72px] w-auto"
-          />
-        </div>
-
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <CountCard label="참은 횟수" value={passedCount} total={total} />
+          <CountCard label="참은 횟수" value={passedCount} total={total} accent />
           <CountCard label="구매 횟수" value={boughtCount} total={total} />
         </div>
 
@@ -131,46 +113,42 @@ function ShareContent({ data }) {
 
 function LevelCard({ level, title, description, nickname }) {
   return (
-    <div className="flex flex-col rounded-3xl border border-[#CBE0CF] bg-white p-6 shadow-[0_18px_40px_rgba(33,70,56,0.08)]">
-      <div className="flex flex-col items-center">
-        <span className="rounded-full bg-[#4A8A72] px-3 py-1 text-xs font-semibold text-white">
+    <div className="flex flex-col overflow-hidden rounded-3xl border border-[#CBE0CF] bg-white shadow-[0_18px_40px_rgba(33,70,56,0.08)]">
+      <div className="flex flex-col items-center bg-gradient-to-b from-[#D8EBDD] to-[#EEF6EE] px-6 pt-8 pb-6">
+        <span className="rounded-full bg-[#4A8A72] px-3 py-1 text-xs font-bold tracking-wide text-white">
           LV.{level}
         </span>
 
-        <div className="mt-4 flex h-44 w-44 items-center justify-center rounded-3xl bg-[#F7FBF6] text-6xl">
-          🏛️
+        <div className="mt-5 flex h-32 w-32 items-center justify-center rounded-3xl bg-white text-5xl shadow-[0_8px_20px_rgba(33,70,56,0.08)] sm:h-44 sm:w-44 sm:text-6xl">
+          <span aria-hidden="true">🏛️</span>
         </div>
+      </div>
 
-        <h2 className="mt-5 text-xl font-bold text-[#1D2A21]">{title}</h2>
-        <p className="mt-2 whitespace-pre-line text-center text-sm text-[#55655A]">
+      <div className="flex flex-1 flex-col items-center px-6 pt-6 pb-7 text-center">
+        <h2 className="text-xl font-bold text-[#1D2A21]">{title}</h2>
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[#55655A]">
           {description}
         </p>
 
         {nickname && (
-          <span className="mt-4 rounded-full bg-[#C9E0CE] px-3 py-1 text-xs font-medium text-[#3F6A4D]">
+          <span className="mt-5 rounded-full bg-[#E8F2EA] px-3 py-1 text-xs font-medium text-[#3F6A4D]">
             @{nickname}의 기록
           </span>
         )}
-      </div>
-
-      <div className="mt-6">
-        <p className="text-xs text-[#9BA59D]">다음 레벨까지</p>
-        <div className="mt-2 h-2 rounded-full bg-[#E4EBE0]">
-          <div
-            className="h-full rounded-full bg-[#4A8A72]"
-            style={{ width: "60%" }}
-          />
-        </div>
       </div>
     </div>
   );
 }
 
-function CountCard({ label, value, total }) {
+function CountCard({ label, value, total, accent = false }) {
   return (
     <div className="rounded-2xl border border-[#E4EBE0] bg-white p-5">
       <p className="text-sm font-medium text-[#55655A]">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-[#1D2A21]">
+      <p
+        className={`mt-2 text-3xl font-bold ${
+          accent ? "text-[#4A8A72]" : "text-[#1D2A21]"
+        }`}
+      >
         {value.toLocaleString("ko-KR")}
       </p>
       <p className="mt-1 text-xs text-[#9BA59D]">

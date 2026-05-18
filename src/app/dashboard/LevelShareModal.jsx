@@ -2,21 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const LEVEL_TITLE = {
-  1: "이제 시작한 짠돌이",
-  2: "감을 잡은 짠돌이",
-  3: "흐름을 타는 짠돌이",
-  4: "잘하고 있는 짠돌이",
-  5: "전설의 짠돌이",
-};
-
-const LEVEL_DESCRIPTION = {
-  1: "충동구매를 줄여보려는\n첫 걸음을 떼셨어요!",
-  2: "조금씩 절약의 감을\n잡아가고 있어요!",
-  3: "절약 습관이\n점점 자리잡고 있어요!",
-  4: "충동구매를 잘 막아내는\n절약 고수예요!",
-  5: "충동구매를 꾸준히 참아낸\n절약의 달인이에요!",
-};
+import { getLevelMeta } from "@/lib/level";
 
 function formatSavedAmount(value) {
   const v = value ?? 0;
@@ -54,8 +40,7 @@ export default function LevelShareModal({ open, onClose, user, summary }) {
   if (!open) return null;
 
   const level = user?.level ?? 1;
-  const title = LEVEL_TITLE[level] ?? "꾸준한 짠돌이";
-  const description = LEVEL_DESCRIPTION[level] ?? "꾸준히 절약하고 있어요!";
+  const { name: title, description } = getLevelMeta(level);
 
   const passedCount = summary?.passed_count ?? 0;
   const successRate = summary?.success_rate ?? 0;
