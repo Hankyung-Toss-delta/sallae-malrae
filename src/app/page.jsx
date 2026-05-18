@@ -74,11 +74,13 @@ export default function Home() {
         const bg = section.querySelector(".section-bg");
         const items = section.querySelectorAll(".section-content > *:not(.step-card-fan)");
         const stepCards = section.querySelectorAll(".step-card-item");
+        const heroBills = section.querySelectorAll(".hero-bill");
         if (!bg) return;
 
         gsap.set(bg, { yPercent: 100 });
         gsap.set(items, { opacity: 0, y: 30 });
         if (stepCards.length) gsap.set(stepCards, { opacity: 0, y: 150 });
+        if (heroBills.length) gsap.set(heroBills, { opacity: 0, y: 40 });
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -94,6 +96,13 @@ export default function Home() {
           { opacity: 1, y: 0, duration: 0.4, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
           "+=0.1"
         );
+        if (heroBills.length) {
+          tl.to(
+            heroBills,
+            { opacity: 0.75, y: 0, duration: 0.6, stagger: 0.4, ease: "power2.out", clearProps: "transform" },
+            "-=0.2"
+          );
+        }
         if (stepCards.length) {
           tl.to(
             stepCards,
@@ -151,7 +160,7 @@ export default function Home() {
           </div>
 
           {/* 지폐 왼쪽 */}
-          <div className="absolute -left-20 top-10 w-[500px] h-[450px] opacity-75 pointer-events-none">
+          <div className="hero-bill absolute -left-20 top-10 w-[500px] h-[450px] opacity-75 pointer-events-none">
             <Image
               src="/images/landing_page/landing_bill_left.png"
               alt=""
@@ -163,7 +172,7 @@ export default function Home() {
           </div>
 
           {/* 지폐 오른쪽 */}
-          <div className="absolute -right-5 top-3/4 -translate-y-1/2 w-[350px] h-[240px] opacity-75 pointer-events-none rotate-[-25deg]">
+          <div className="hero-bill absolute -right-5 top-3/4 -translate-y-1/2 w-[350px] h-[240px] opacity-75 pointer-events-none rotate-[-25deg]">
             <Image
               src="/images/landing_page/landing_bill_right.png"
               alt=""
@@ -377,7 +386,9 @@ export default function Home() {
         </section>
       </main>
 
-      <Footer />
+      <section className="snap-section">
+        <Footer />
+      </section>
     </>
   );
 }
