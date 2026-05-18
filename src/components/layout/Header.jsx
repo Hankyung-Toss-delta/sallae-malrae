@@ -83,11 +83,11 @@ export default function Header({
   return (
     <>
       <header
-        className={`fixed left-0 top-0 z-50 w-full px-6 md:px-10 py-2 transition-transform duration-300 ease-in-out ${
-          visible ? "translate-y-0" : "-translate-y-full"
-        } ${className}`}
+        className={`fixed left-0 top-0 z-40 w-full px-6 md:px-10 py-2 transition-transform duration-300 ease-in-out ${
+          transparent ? "bg-transparent" : "bg-[#f7fbf8]"
+        } ${visible ? "translate-y-0" : "-translate-y-full"} ${className}`}
       >
-        <div className={`flex items-center justify-between gap-8 ${transparent ? "bg-transparent" : "bg-[#f7fbf8]"}`}>
+        <div className="flex items-center justify-between gap-8">
           {/* 로고 + 데스크톱 nav */}
           <div className="flex items-end gap-8">
             <Link href={resolvedLogoHref} onClick={() => setMobileMenuOpen(false)}>
