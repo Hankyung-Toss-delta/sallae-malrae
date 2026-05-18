@@ -101,6 +101,15 @@ export default function CoolingOffPage() {
 
   const handlePanelClose = () => setIsPanelOpen(false);
 
+  const handleDelete = async (itemId) => {
+    try {
+      await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
+    } finally {
+      setIsPanelOpen(false);
+      setShouldRefetch((n) => n + 1);
+    }
+  };
+
   const handleStatusChange = async (itemId, status) => {
     try {
       const res = await fetch(`/api/items/${itemId}/status`, {
@@ -314,6 +323,7 @@ export default function CoolingOffPage() {
         isOpen={isPanelOpen}
         onClose={handlePanelClose}
         onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
       />
     </main>
   );
