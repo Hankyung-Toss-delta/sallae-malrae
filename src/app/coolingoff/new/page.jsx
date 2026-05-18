@@ -691,11 +691,11 @@ function CoolingOffPeriodPicker() {
                 disabled={disabled}
                 aria-pressed={isSelected}
                 onClick={() => setSelectedDay(day)}
-                className={`relative flex h-10 items-center justify-center rounded-xl text-sm font-medium transition-colors ${
+                className={`relative flex h-10 items-center justify-center rounded-xl text-sm font-medium transition-colors disabled:cursor-default ${
                   isSelected
                     ? "bg-[#E8F1E9] text-[#38503E]"
                     : disabled
-                      ? "text-[#C5CCC3] cursor-not-allowed"
+                      ? "text-[#C5CCC3]"
                       : "text-[#3B443B] hover:bg-[#F6FAF5]"
                 }`}
               >
