@@ -15,7 +15,8 @@ export async function GET(request) {
         `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
                 COALESCE(SUM(bought_count), 0)  AS bought_count,
                 COALESCE(SUM(saved_amount), 0)  AS saved_amount
-         FROM user_monthly_stats WHERE user_id = ?`,
+         FROM user_monthly_stats
+         WHERE user_id = ? AND year = YEAR(NOW()) AND month = MONTH(NOW())`,
         [user.user_id],
       ),
       query(
@@ -36,6 +37,7 @@ export async function GET(request) {
         `SELECT c.name, COUNT(*) AS count
          FROM items i JOIN categories c ON i.category_id = c.id
          WHERE i.user_id = ? AND i.status = 'passed'
+           AND YEAR(i.decided_at) = YEAR(NOW()) AND MONTH(i.decided_at) = MONTH(NOW())
          GROUP BY i.category_id, c.name
          ORDER BY count DESC`,
         [user.user_id],
