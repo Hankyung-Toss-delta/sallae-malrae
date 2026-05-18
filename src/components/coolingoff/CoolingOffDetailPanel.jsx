@@ -59,6 +59,7 @@ export default function CoolingOffDetailPanel({
               width={CELEBRATION_CONFIG[celebration].width}
               height={CELEBRATION_CONFIG[celebration].height}
               className="object-contain"
+              style={{ height: "auto" }}
             />
           </div>
           <p className="mt-6 text-white text-xl font-bold text-center px-8 leading-relaxed">
