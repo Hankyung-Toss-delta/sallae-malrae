@@ -22,9 +22,11 @@ export default function CoolingOffDetailPanel({
         />
 
         <div
-          className={`fixed top-0 right-0 h-screen w-[480px] bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out rounded-l-3xl ${
-            isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed z-50 bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-out
+            bottom-0 left-0 right-0 max-h-[90vh] rounded-t-3xl
+            md:top-0 md:right-0 md:left-auto md:bottom-auto md:h-screen md:max-h-none md:w-[480px] md:rounded-t-none md:rounded-l-3xl
+            ${isOpen ? "translate-y-0" : "translate-y-full md:translate-y-0 md:translate-x-full"}
+          `}
         >
           {item && (
             <>
