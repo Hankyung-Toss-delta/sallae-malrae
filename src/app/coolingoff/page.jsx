@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { CoolingOffCard } from "@/components/ui/Card";
 import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel";
+import LevelUpModal from "@/components/coolingoff/LevelUpModal";
+import { getLevelMeta } from "@/lib/level";
 
 const CAROUSEL_GAP = 16;
 const CAROUSEL_VISIBLE = 3;
@@ -28,6 +30,8 @@ export default function CoolingOffPage() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
   const [shouldRefetch, setShouldRefetch] = useState(0);
+  const [levelUpInfo, setLevelUpInfo] = useState(null);
+  const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const carouselRef = useRef(null);
 
@@ -41,7 +45,7 @@ export default function CoolingOffPage() {
           return;
         }
         setFetchError(false);
-        setItems(json.data.items);
+        setItems(json.data.items.map(item => ({ ...item, days_left: Number(item.days_left) })));
       })
       .catch(() => setFetchError(true));
   }, [shouldRefetch, router]);
@@ -100,7 +104,14 @@ export default function CoolingOffPage() {
     setIsPanelOpen(true);
   };
 
-  const handlePanelClose = () => { setIsPanelOpen(false); setStatusError(""); };
+  const handlePanelClose = () => setIsPanelOpen(false);
+
+  const handleCelebrationEnd = useCallback(() => {
+    if (pendingLevelUpRef.current) {
+      setLevelUpInfo(pendingLevelUpRef.current);
+      pendingLevelUpRef.current = null;
+    }
+  }, []);
 
   const handleDelete = async (itemId) => {
     try {
@@ -120,17 +131,17 @@ export default function CoolingOffPage() {
         body: JSON.stringify({ status }),
       });
       const json = await res.json();
-      if (!json.success) {
-        if (json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
-        setStatusError("상태 변경에 실패했어요. 다시 시도해주세요.");
-        return;
+      if (!json.success && json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      if (json.data?.updatedStats?.levelUp) {
+        pendingLevelUpRef.current = getLevelMeta(json.data.updatedStats.level);
       }
+    } catch {
+      setStatusError("네트워크 오류가 발생했어요. 다시 시도해주세요.");
+    } finally {
       setShouldRefetch((n) => n + 1);
       setIsPanelOpen(false);
       setIsPendingExpanded(false);
       setCarouselIndex(0);
-    } catch {
-      setStatusError("네트워크 오류가 발생했어요. 다시 시도해주세요.");
     }
   };
 
@@ -324,6 +335,8 @@ export default function CoolingOffPage() {
 
       <Footer />
 
+      <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
+
       {statusError && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-3 shadow-lg">
           <p className="text-sm font-medium text-red-500">{statusError}</p>
@@ -342,6 +355,7 @@ export default function CoolingOffPage() {
         onClose={handlePanelClose}
         onStatusChange={handleStatusChange}
         onDelete={handleDelete}
+        onCelebrationEnd={handleCelebrationEnd}
       />
     </main>
   );
