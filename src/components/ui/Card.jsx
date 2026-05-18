@@ -18,7 +18,7 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_name, expire_at, memo, impulse_score, image } =
+  const { name, price, category_name, expire_at, status, memo, impulse_score, image } =
     item;
 
   const daysLeft = calcDaysLeft(expire_at);
@@ -31,12 +31,16 @@ export function CoolingOffCard({ item, onClick }) {
       <div className="bg-[#F1F1EA]">
         <div className="relative flex items-center gap-4 px-4 pt-4 pb-3">
           <div className="absolute top-3 right-3">
-            {daysLeft === 0 ? (
+            {status === "passed" || status === "bought" ? (
               <span className="bg-pink-100 text-pink-400 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 완료
               </span>
-            ) : (
+            ) : daysLeft === 0 ? (
               <span className="bg-orange-100 text-orange-500 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                대기
+              </span>
+            ) : (
+              <span className="bg-green-100 text-green-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 D-{daysLeft}
               </span>
             )}
