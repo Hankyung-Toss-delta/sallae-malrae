@@ -230,7 +230,9 @@ function DashboardContent({ data }) {
           >
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[#314639]">{item.label}</p>
-              {item.label === "레벨" && <ShareButton />}
+              {item.label === "레벨" && (
+                <ShareButton user={user} summary={summary} />
+              )}
             </div>
 
             <p className="text-[1.5rem] font-bold leading-none text-[#4A8A72] lg:text-[1.75rem]">
