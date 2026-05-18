@@ -1,5 +1,5 @@
-import { query } from '@/lib/db';
-import { sendMail } from '@/lib/mailer';
+import { query } from './db.js';
+import { sendMail } from './mailer.js';
 
 // 현재 시각을 정각으로 내림 (분/초/ms = 0)
 function floorToHour(date) {
@@ -29,15 +29,21 @@ async function sendAndLog(itemId, type, emailFn) {
     errorMsg = err.message?.slice(0, 500) ?? 'Unknown error';
   }
   // INSERT IGNORE: UNIQUE(item_id, type) 충돌 시 조용히 스킵 (이미 발송된 것)
-  await query(
-    `INSERT IGNORE INTO email_logs (item_id, type, status, error_msg)
-     VALUES (?, ?, ?, ?)`,
-    [itemId, type, status, errorMsg],
-  );
+  // DB 장애로 로그 저장 실패해도 다음 항목 발송은 계속 진행.
+  try {
+    await query(
+      `INSERT IGNORE INTO email_logs (item_id, type, status, error_msg)
+       VALUES (?, ?, ?, ?)`,
+      [itemId, type, status, errorMsg],
+    );
+  } catch (dbErr) {
+    console.error(`[notifier] email_logs INSERT 실패 (item_id=${itemId}, type=${type}):`, dbErr.message);
+  }
 }
 
 export async function sendDueNotifications(now) {
   const grid = floorToHour(now);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
   // before_24h: 24시간 후 만료되는 항목 중 미발송 + 컷오프 조건
   // 컷오프: expire_at - 24h > created_at + 1h (등록 직후 알림 방지, ADR-006)
@@ -53,14 +59,12 @@ export async function sendDueNotifications(now) {
     [grid],
   );
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
-
   for (const row of before24hRows) {
     await sendAndLog(row.id, 'before_24h', () =>
       sendMail({
         to: row.email,
         subject: '[살래말래] 구매 결정 시간이 24시간 남았어요',
-        text: `안녕하세요, ${row.nickname}님!\n\n등록하신 항목 "${row.name}"의 쿨링오프 시간이 24시간 후인 ${formatKoreanDatetime(row.expire_at)}에 끝납니다.\n\n아래 링크에서 최종 결정을 내려주세요.\n${baseUrl}/auth/login`,
+        text: `안녕하세요, ${row.nickname}님!\n\n등록하신 항목 "${row.name}"의 쿨링오프 시간이 24시간 후인 ${formatKoreanDatetime(row.expire_at)}에 끝납니다.\n\n아래 링크에서 최종 결정을 내려주세요.\n${baseUrl}/coolingoff`,
       }),
     );
   }
@@ -82,7 +86,7 @@ export async function sendDueNotifications(now) {
       sendMail({
         to: row.email,
         subject: '[살래말래] 쿨링오프 시간이 끝났어요',
-        text: `안녕하세요, ${row.nickname}님!\n\n등록하신 항목 "${row.name}"의 쿨링오프 시간이 끝났습니다.\n\n아래 링크에서 최종 결정(살래 / 말래)을 내려주세요.\n${baseUrl}/auth/login`,
+        text: `안녕하세요, ${row.nickname}님!\n\n등록하신 항목 "${row.name}"의 쿨링오프 시간이 끝났습니다.\n\n아래 링크에서 최종 결정(살래 / 말래)을 내려주세요.\n${baseUrl}/coolingoff`,
       }),
     );
   }

@@ -5,6 +5,8 @@ const VARIANT_STYLES = {
     "border border-[#9AB79E] bg-white text-[#5D7A62] hover:bg-[#E8F1E9] disabled:border-[#C8D5C6] disabled:text-[#9CAB99]",
   ghost:
     "bg-transparent text-[#5D7A62] hover:bg-[#E8F1E9] disabled:text-[#9CAB99]",
+  neutral:
+    "bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400",
 };
 
 const SIZE_STYLES = {
