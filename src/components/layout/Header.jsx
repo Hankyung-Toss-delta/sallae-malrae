@@ -155,6 +155,14 @@ export default function Header({
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
+          <button
+            type="button"
+            aria-label="메뉴 닫기"
+            onClick={() => setMobileMenuOpen(false)}
+            className="absolute top-4 right-6 text-gray-400 hover:text-gray-700 text-3xl leading-none"
+          >
+            ×
+          </button>
           <nav className="flex flex-col gap-2 mb-8">
             {resolvedNavItems.map((item) => (
               <Link
