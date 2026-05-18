@@ -12,6 +12,7 @@ import Input from "@/components/ui/Input";
 import ErrorAlert from "@/components/ui/ErrorAlert";
 import { ERROR_MESSAGES } from "@/constants/errors";
 import { CATEGORY_OPTIONS } from "@/constants/categories";
+import RegisterSuccessModal from "./RegisterSuccessModal";
 
 const CALENDAR_WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -230,10 +231,19 @@ function PageTitle() {
   );
 }
 
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
 function ImageUploadBox() {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [fileName, setFileName] = useState("");
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     return () => {
@@ -249,6 +259,20 @@ function ImageUploadBox() {
     if (!nextFile) {
       return;
     }
+
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(nextFile.type)) {
+      setImageError("JPG, PNG, WEBP, GIF 형식만 올릴 수 있어요.");
+      event.target.value = "";
+      return;
+    }
+
+    if (nextFile.size > MAX_IMAGE_SIZE_BYTES) {
+      setImageError("이미지는 5MB 이하만 올릴 수 있어요.");
+      event.target.value = "";
+      return;
+    }
+
+    setImageError("");
 
     const nextPreviewUrl = URL.createObjectURL(nextFile);
 
@@ -288,9 +312,14 @@ function ImageUploadBox() {
             사진 업로드
           </button>
 
-          <p className="text-xs text-[#8C968A]">
-            {fileName ||
-              "선택 항목이에요. 이미지를 고르면 여기에 이름이 보여요."}
+          <p
+            className={`text-xs ${
+              imageError ? "text-[#D96C6C] font-medium" : "text-[#8C968A]"
+            }`}
+          >
+            {imageError ||
+              fileName ||
+              "5MB 이하 JPG·PNG·WEBP·GIF 이미지를 올릴 수 있어요."}
           </p>
         </div>
         {previewUrl && (
@@ -761,6 +790,7 @@ export default function CoolingOffNewPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -793,7 +823,7 @@ export default function CoolingOffNewPage() {
       const json = await res.json();
 
       if (json.success) {
-        router.push("/coolingoff");
+        setShowSuccessModal(true);
         return;
       }
 
@@ -850,6 +880,11 @@ export default function CoolingOffNewPage() {
       </section>
 
       <Footer />
+
+      <RegisterSuccessModal
+        open={showSuccessModal}
+        onConfirm={() => router.push("/coolingoff")}
+      />
     </main>
   );
 }
