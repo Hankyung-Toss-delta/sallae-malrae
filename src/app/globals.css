@@ -22,3 +22,9 @@
     font-family: var(--font-pretendard), sans-serif;
   }
 }
+
+/* ── Landing page scroll snap ── */
+.snap-section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
