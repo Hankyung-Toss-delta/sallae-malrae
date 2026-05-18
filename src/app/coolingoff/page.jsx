@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { CoolingOffCard, calcDaysLeft } from "@/components/ui/Card";
 import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel";
+import LevelUpModal from "@/components/coolingoff/LevelUpModal";
+import { getLevelMeta } from "@/lib/level";
 
 const CAROUSEL_GAP = 16;
 const CAROUSEL_VISIBLE = 3;
@@ -28,6 +30,8 @@ export default function CoolingOffPage() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
   const [shouldRefetch, setShouldRefetch] = useState(0);
+  const [levelUpInfo, setLevelUpInfo] = useState(null);
+  const pendingLevelUpRef = useRef(null);
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -101,6 +105,13 @@ export default function CoolingOffPage() {
 
   const handlePanelClose = () => setIsPanelOpen(false);
 
+  const handleCelebrationEnd = useCallback(() => {
+    if (pendingLevelUpRef.current) {
+      setLevelUpInfo(pendingLevelUpRef.current);
+      pendingLevelUpRef.current = null;
+    }
+  }, []);
+
   const handleDelete = async (itemId) => {
     try {
       await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
@@ -119,6 +130,9 @@ export default function CoolingOffPage() {
       });
       const json = await res.json();
       if (!json.success && json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      if (json.data?.updatedStats?.levelUp) {
+        pendingLevelUpRef.current = getLevelMeta(json.data.updatedStats.level);
+      }
       setShouldRefetch((n) => n + 1);
     } catch {
       setShouldRefetch((n) => n + 1);
@@ -318,12 +332,15 @@ export default function CoolingOffPage() {
 
       <Footer />
 
+      <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
+
       <CoolingOffDetailPanel
         item={selectedItem}
         isOpen={isPanelOpen}
         onClose={handlePanelClose}
         onStatusChange={handleStatusChange}
         onDelete={handleDelete}
+        onCelebrationEnd={handleCelebrationEnd}
       />
     </main>
   );
