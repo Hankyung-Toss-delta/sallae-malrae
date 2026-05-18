@@ -72,12 +72,14 @@ export default function Home() {
 
       sections.forEach((section) => {
         const bg = section.querySelector(".section-bg");
+        const sectionContent = section.querySelector(".section-content");
         const items = section.querySelectorAll(".section-content > *:not(.step-card-fan)");
         const stepCards = section.querySelectorAll(".step-card-item");
         const heroBills = section.querySelectorAll(".hero-bill");
         if (!bg) return;
 
         gsap.set(bg, { yPercent: 100 });
+        if (sectionContent) gsap.set(sectionContent, { opacity: 0, y: 40 });
         gsap.set(items, { opacity: 0, y: 30 });
         if (stepCards.length) gsap.set(stepCards, { opacity: 0, y: 150 });
         if (heroBills.length) gsap.set(heroBills, { opacity: 0, y: 40 });
@@ -91,6 +93,9 @@ export default function Home() {
         });
 
         tl.to(bg, { yPercent: 0, duration: 0.6, ease: "power2.out" });
+        if (sectionContent) {
+          tl.to(sectionContent, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", clearProps: "transform" }, "+=0.1");
+        }
         tl.to(
           items,
           { opacity: 1, y: 0, duration: 0.4, stagger: 0.2, ease: "power2.out", clearProps: "transform" },
