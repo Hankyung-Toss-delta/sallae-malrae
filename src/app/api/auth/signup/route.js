@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/response';
+import { checkRateLimit } from '@/lib/rateLimit';
 import {
   isValidEmail,
   isValidPasswordLength,
@@ -14,6 +15,13 @@ import {
 //   1차: 코드 레벨 SELECT 선검사 (race-free 케이스에서 사용자 친화 응답)
 //   2차: DB uk_users_email / uk_users_nickname UNIQUE (코드 race condition 최종 방어선)
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip')
+    ?? 'unknown';
+  if (!checkRateLimit(ip, 'signup', 5, 60 * 60 * 1000)) {
+    return errorResponse('RATE_LIMITED');
+  }
+
   let body;
   try {
     body = await request.json();

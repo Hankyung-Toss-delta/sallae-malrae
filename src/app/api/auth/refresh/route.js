@@ -3,6 +3,8 @@ import { query } from '@/lib/db';
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/lib/jwt';
 import { successResponse, errorResponse } from '@/lib/response';
 
+const IS_PROD = process.env.NODE_ENV === 'production';
+
 // POST /api/auth/refresh — RT 검증 후 새 AT + RT 발급 (Rotation).
 // ADR-005: token_version 불일치 = 구 RT 재사용 시도 → 전 세션 강제 만료.
 export async function POST(request) {
@@ -55,6 +57,7 @@ export async function POST(request) {
     maxAge: 15 * 60,
     path: '/',
     sameSite: 'strict',
+    secure: IS_PROD,
   });
 
   response.cookies.set('refreshToken', refreshToken, {
@@ -62,6 +65,7 @@ export async function POST(request) {
     maxAge: 7 * 24 * 60 * 60,
     path: '/',
     sameSite: 'strict',
+    secure: IS_PROD,
   });
 
   return response;

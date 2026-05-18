@@ -35,6 +35,9 @@ export const ERRORS = {
 
   // 정책 위반
   CANNOT_DELETE_DECIDED:  { message: 'Decided items cannot be deleted.',                  status: 400 },
+
+  // 요청 제한
+  RATE_LIMITED:           { message: 'Too many requests. Please try again later.',         status: 429 },
 };
 
 // 사용자 노출용 한국어 메시지 매핑 — 백엔드가 내려준 code를 키로 조회.
@@ -52,4 +55,5 @@ export const ERROR_MESSAGES = {
   INVALID_IMPULSE_SCORE:'구매 충동 점수를 확인해주세요.',
   INVALID_EXPIRE_AT:    '쿨링오프 날짜는 오늘부터 30일 이내로 선택해주세요.',
   INVALID_IMAGE:        '이미지는 5MB 이하의 JPG, PNG, WebP, GIF만 가능해요.',
+  RATE_LIMITED:         '요청이 너무 많아요. 잠시 후 다시 시도해주세요.',
 };
