@@ -23,7 +23,7 @@ export default function Header({
   activeMenu,
   navItems,
   rightSlot,
-  logoHref = null,
+  logoHref = "auto",
   transparent = false,
   className = "",
 }) {
@@ -66,7 +66,7 @@ export default function Header({
   }, [mobileMenuOpen]);
 
   const isAuthPage = variant === "auth";
-  const resolvedLogoHref = logoHref ?? (isAuthPage || transparent ? "/" : "/dashboard");
+  const resolvedLogoHref = logoHref === "auto" ? (isAuthPage || transparent ? "/" : "/dashboard") : logoHref;
   const resolvedNavItems = navItems ?? (isAuthPage ? [] : DEFAULT_NAV_ITEMS);
   const logoutButton = (
     <button
