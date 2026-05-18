@@ -343,10 +343,10 @@ export default function Home() {
           <div className="section-bg absolute inset-0" />
           <div className="section-content relative z-10 w-full px-6">
             <div className="text-center mb-10 md:mb-16 gap-4 flex flex-col">
-              <h2 className="text-2xl md:text-5xl font-extrabold text-[#1a3a2e] mb-2">
+              <h2 className="text-2xl md:text-4xl mt-0 md:mt-5 font-extrabold text-[#1a3a2e] mb-2">
                 충동구매를 막는 3단계
               </h2>
-              <p className="text-2xl text-gray-500">뜨거운 마음, 차가운 결정으로</p>
+              <p className="text-sm md:text-xl text-gray-500">뜨거운 마음, 차가운 결정으로</p>
             </div>
 
             {/* 모바일: 가로 스크롤 캐러셀 */}

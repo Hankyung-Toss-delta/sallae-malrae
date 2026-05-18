@@ -21,6 +21,8 @@ export default function StepCard({ step, title, subtitle, description, isActive,
             fill
             sizes="360px"
             className="object-contain"
+            loading="eager"
+            priority={step === 1}
           />
         </div>
       )}
