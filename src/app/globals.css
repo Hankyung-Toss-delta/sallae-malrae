@@ -23,6 +23,16 @@
   }
 }
 
+/* ── Toast slide-down animation ── */
+@keyframes slideDown {
+  from { transform: translateY(-120%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(0);     opacity: 1; }
+  to   { transform: translateY(-120%); opacity: 0; }
+}
+
 /* ── Landing page scroll snap ── */
 .snap-section {
   scroll-snap-align: start;

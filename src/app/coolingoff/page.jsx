@@ -34,6 +34,7 @@ export default function CoolingOffPage() {
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const [deleteResult, setDeleteResult] = useState(null);
+  const [isDeleteLeaving, setIsDeleteLeaving] = useState(false);
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -107,11 +108,19 @@ export default function CoolingOffPage() {
 
   const handlePanelClose = () => setIsPanelOpen(false);
 
+  const dismissDeleteToast = useCallback(() => {
+    setIsDeleteLeaving(true);
+    setTimeout(() => {
+      setDeleteResult(null);
+      setIsDeleteLeaving(false);
+    }, 280);
+  }, []);
+
   useEffect(() => {
     if (!deleteResult) return;
-    const timer = setTimeout(() => setDeleteResult(null), 3000);
+    const timer = setTimeout(dismissDeleteToast, 1500);
     return () => clearTimeout(timer);
-  }, [deleteResult]);
+  }, [deleteResult, dismissDeleteToast]);
 
   const handleCelebrationEnd = useCallback(() => {
     if (pendingLevelUpRef.current) {
@@ -348,16 +357,18 @@ export default function CoolingOffPage() {
       <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
 
       {deleteResult && (
-        <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] flex items-center gap-3 rounded-2xl px-5 py-3 shadow-lg ${
-          deleteResult === 'success'
-            ? 'bg-green-50 border border-green-200'
-            : 'bg-red-50 border border-red-200'
-        }`}>
-          <p className={`text-sm font-medium ${deleteResult === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+        <div
+          className={`fixed top-6 inset-x-0 mx-auto w-fit z-[70] flex items-center gap-3 rounded-2xl px-5 py-3 shadow-lg ${isDeleteLeaving ? 'animate-[slideUp_0.28s_ease-in_forwards]' : 'animate-[slideDown_0.3s_ease-out]'} ${
+            deleteResult === 'success'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
+          }`}
+        >
+          <p className={`text-sm font-medium whitespace-nowrap ${deleteResult === 'success' ? 'text-green-600' : 'text-red-500'}`}>
             {deleteResult === 'success' ? '삭제가 완료되었습니다.' : '삭제 중 오류가 발생했어요. 다시 시도해주세요.'}
           </p>
           <button
-            onClick={() => setDeleteResult(null)}
+            onClick={dismissDeleteToast}
             className={`text-lg leading-none ${deleteResult === 'success' ? 'text-green-300 hover:text-green-500' : 'text-red-300 hover:text-red-500'}`}
           >
             ×
