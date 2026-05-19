@@ -4,47 +4,46 @@ import { useState } from "react";
 import DropdownField from "./DropdownField";
 
 const TIME_PERIOD_OPTIONS = ["오전", "오후"];
-const TIME_HOUR_OPTIONS = Array.from({ length: 12 }, (_, index) =>
-  String(index + 1).padStart(2, "0"),
-);
-
-function toHour24(period, hourStr) {
-  const h = parseInt(hourStr, 10);
-  if (period === "오전") return h === 12 ? 0 : h;
-  return h === 12 ? 12 : h + 12;
-}
+const AM_HOURS = Array.from({ length: 12 }, (_, i) => String(i).padStart(2, "0"));
+const PM_HOURS = Array.from({ length: 12 }, (_, i) => String(i + 12).padStart(2, "0"));
 
 function getMinValidTime(minHour24) {
-  for (const p of TIME_PERIOD_OPTIONS) {
-    for (const h of TIME_HOUR_OPTIONS) {
-      if (toHour24(p, h) >= minHour24) return { period: p, hour: h };
-    }
+  for (const h of AM_HOURS) {
+    if (parseInt(h, 10) >= minHour24) return { period: "오전", hour: h };
+  }
+  for (const h of PM_HOURS) {
+    if (parseInt(h, 10) >= minHour24) return { period: "오후", hour: h };
   }
   return null;
 }
 
 export default function CoolingOffTimePicker({ minHour24 }) {
   const [period, setPeriod] = useState("오후");
-  const [hour, setHour] = useState("08");
+  const [hour, setHour] = useState("20");
 
   const effectiveTime =
-    minHour24 !== null && toHour24(period, hour) < minHour24
+    minHour24 !== null && parseInt(hour, 10) < minHour24
       ? (getMinValidTime(minHour24) ?? { period, hour })
       : { period, hour };
 
   const disabledPeriods =
     minHour24 !== null
-      ? TIME_PERIOD_OPTIONS.filter((p) =>
-          TIME_HOUR_OPTIONS.every((h) => toHour24(p, h) < minHour24),
-        )
+      ? TIME_PERIOD_OPTIONS.filter((p) => {
+          const hours = p === "오전" ? AM_HOURS : PM_HOURS;
+          return hours.every((h) => parseInt(h, 10) < minHour24);
+        })
       : [];
 
+  const currentHours = effectiveTime.period === "오전" ? AM_HOURS : PM_HOURS;
   const disabledHours =
     minHour24 !== null
-      ? TIME_HOUR_OPTIONS.filter(
-          (h) => toHour24(effectiveTime.period, h) < minHour24,
-        )
+      ? currentHours.filter((h) => parseInt(h, 10) < minHour24)
       : [];
+
+  const handlePeriodChange = (newPeriod) => {
+    setPeriod(newPeriod);
+    setHour(newPeriod === "오전" ? "00" : "12");
+  };
 
   return (
     <div className="mt-4 rounded-[20px] bg-[#FBFCFB] p-4">
@@ -62,13 +61,13 @@ export default function CoolingOffTimePicker({ minHour24 }) {
           name="decisionPeriod"
           options={TIME_PERIOD_OPTIONS}
           value={effectiveTime.period}
-          onChange={setPeriod}
+          onChange={handlePeriodChange}
           disabledValues={disabledPeriods}
         />
         <DropdownField
           id="decisionHour"
           name="decisionHour"
-          options={TIME_HOUR_OPTIONS}
+          options={currentHours}
           value={effectiveTime.hour}
           onChange={setHour}
           suffix="시"
