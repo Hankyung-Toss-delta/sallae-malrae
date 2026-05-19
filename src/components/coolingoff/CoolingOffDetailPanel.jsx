@@ -28,6 +28,7 @@ export default function CoolingOffDetailPanel({
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [celebration, setCelebration] = useState(null);
   const daysLeft = item?.days_left ?? 0;
+  const timeLeftLabel = item?.time_left_label ?? 'D-day';
   const isDecided = item?.status === "passed" || item?.status === "bought";
   const onCelebrationEndRef = useRef(onCelebrationEnd);
   useEffect(() => { onCelebrationEndRef.current = onCelebrationEnd; });
@@ -150,7 +151,7 @@ export default function CoolingOffDetailPanel({
                       </span>
                     ) : (
                       <span className="bg-green-100 text-green-600 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                        D-{daysLeft}
+                        {timeLeftLabel}
                       </span>
                     )}
                     <button
@@ -180,6 +181,22 @@ export default function CoolingOffDetailPanel({
 
               <div className="flex-1 overflow-y-auto px-7 min-h-0">
                 <div className="flex flex-col gap-6">
+                {!isDecided && (
+                  <div className="rounded-xl bg-[#F8F1E4] px-4 py-3">
+                    <p className="text-center text-sm text-[#7E6438]">
+                      <span className="font-semibold text-[#5C4827]">
+                        {new Date(item.expire_at).toLocaleString('ko-KR', {
+                          timeZone: 'Asia/Seoul',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          hour12: true,
+                        })}
+                      </span>
+                      까지 멈춰볼게요
+                    </p>
+                  </div>
+                )}
                 <div className="relative w-full h-[220px] bg-white rounded-2xl overflow-hidden">
                   {item.image ? (
                     <Image
