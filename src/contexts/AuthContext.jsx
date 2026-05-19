@@ -7,13 +7,13 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const isRefreshing = useRef(false);
+  const refreshPromise = useRef(null);
 
   const login = (userInfo) => setUser(userInfo);
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
     } catch {
       // 네트워크 오류여도 클라이언트 상태는 비움(사용자 의도 보존).
     } finally {
@@ -22,22 +22,25 @@ export function AuthProvider({ children }) {
   };
 
   // AT 만료(401) 시 RT로 재발급 후 원래 요청 1회 재시도.
-  // 재발급 자체가 401이면 세션 만료로 간주 — 원본 응답 그대로 반환.
+  // 재발급 자체가 401이거나 네트워크 오류면 세션 만료로 간주 — 원본 응답 그대로 반환.
   const fetchWithRefresh = async (input, init) => {
-    const res = await fetch(input, init);
+    const reqInit = { ...init, credentials: init?.credentials ?? "same-origin" };
+    const res = await fetch(input, reqInit);
     if (res.status !== 401) return res;
 
-    // 동시 요청이 여럿일 때 refresh를 중복 호출하지 않도록 플래그로 직렬화.
-    if (isRefreshing.current) return res;
-    isRefreshing.current = true;
-
-    try {
-      const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
-      if (!refreshRes.ok) return res; // RT도 만료 — 원본 401 반환
-      return fetch(input, init);     // 새 AT 쿠키로 재시도
-    } finally {
-      isRefreshing.current = false;
+    // 동시 요청이 여럿이면 모두 같은 refresh Promise를 await 후 각자 재시도.
+    if (!refreshPromise.current) {
+      refreshPromise.current = fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "same-origin",
+      })
+        .catch(() => null) // 네트워크 오류 시 null로 흡수 → 아래에서 원본 401 반환
+        .finally(() => { refreshPromise.current = null; });
     }
+
+    const refreshRes = await refreshPromise.current;
+    if (!refreshRes || !refreshRes.ok) return res; // RT 만료/네트워크 오류 — 원본 401 반환
+    return fetch(input, reqInit);                // 새 AT 쿠키로 재시도
   };
 
   return (

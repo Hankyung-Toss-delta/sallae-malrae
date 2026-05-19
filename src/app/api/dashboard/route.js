@@ -22,7 +22,7 @@ export async function GET(request) {
       query(
         `SELECT i.id AS item_id, i.name, i.price, i.expire_at, i.image,
                 i.category_id, c.name AS category_name,
-                GREATEST(0, CEIL(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left
+                GREATEST(0, FLOOR(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left
          FROM items i JOIN categories c ON i.category_id = c.id
          WHERE i.user_id = ? AND i.status = 'waiting' AND i.expire_at >= NOW()
          ORDER BY i.expire_at ASC LIMIT 3`,
