@@ -94,10 +94,10 @@ export default function LandingHero() {
 
         <div className="flex flex-col gap-2 text-sm text-brand-dark mb-12 items-center text-center md:text-xl md:w-128 md:items-stretch md:text-left">
           <p className="md:self-start">
-            "내가 정한 <span className="font-bold">쿨링오프</span> 기간,
+            &ldquo;내가 정한 <span className="font-bold">쿨링오프</span> 기간,
           </p>
           <p className="md:self-end md:mr-8">
-            시간이 지나면 진짜 필요한 물건만 남아요."
+            시간이 지나면 진짜 필요한 물건만 남아요.&rdquo;
           </p>
         </div>
 
