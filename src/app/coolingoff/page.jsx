@@ -192,11 +192,12 @@ export default function CoolingOffPage() {
 
       {deleteResult && (
         <div
-          className={`fixed top-6 inset-x-0 mx-auto w-fit z-[70] flex items-center gap-3 rounded-2xl px-5 py-3 shadow-lg ${isDeleteLeaving ? 'animate-[slideUp_0.28s_ease-in_forwards]' : 'animate-[slideDown_0.3s_ease-out]'} ${
+          className={`fixed top-6 inset-x-0 mx-auto w-fit z-[70] flex items-center gap-3 rounded-2xl px-5 py-3 shadow-lg ${
             deleteResult === 'success'
               ? 'bg-green-50 border border-green-200'
               : 'bg-red-50 border border-red-200'
           }`}
+          style={{ animation: isDeleteLeaving ? 'slideUp 0.28s ease-in forwards' : 'slideDown 0.3s ease-out' }}
         >
           <p className={`text-sm font-medium whitespace-nowrap ${deleteResult === 'success' ? 'text-green-600' : 'text-red-500'}`}>
             {deleteResult === 'success' ? '삭제가 완료되었습니다.' : '삭제 중 오류가 발생했어요. 다시 시도해주세요.'}
