@@ -10,6 +10,7 @@ import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel
 import LevelUpModal from "@/components/coolingoff/LevelUpModal";
 import PendingItemsSection from "@/components/coolingoff/PendingItemsSection";
 import CoolingOffFilterBar from "@/components/coolingoff/CoolingOffFilterBar";
+import Toast from "@/components/coolingoff/Toast";
 import { getLevelMeta } from "@/lib/level";
 
 export default function CoolingOffPage() {
@@ -23,6 +24,8 @@ export default function CoolingOffPage() {
   const [levelUpInfo, setLevelUpInfo] = useState(null);
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
+  const [deleteResult, setDeleteResult] = useState(null);
+  const carouselRef = useRef(null);
 
   const fetchItems = useCallback(() => {
     fetch('/api/items?status=all', { method: 'GET' })
@@ -75,6 +78,8 @@ export default function CoolingOffPage() {
     setIsPanelOpen(true);
   };
 
+  const handlePanelClose = () => setIsPanelOpen(false);
+
   const handleCelebrationEnd = useCallback(() => {
     if (pendingLevelUpRef.current) {
       setLevelUpInfo(pendingLevelUpRef.current);
@@ -84,7 +89,10 @@ export default function CoolingOffPage() {
 
   const handleDelete = async (itemId) => {
     try {
-      await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
+      setDeleteResult(res.ok ? 'success' : 'error');
+    } catch {
+      setDeleteResult('error');
     } finally {
       setIsPanelOpen(false);
       fetchItems();
@@ -168,17 +176,12 @@ export default function CoolingOffPage() {
 
       <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
 
-      {statusError && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-3 shadow-lg">
-          <p className="text-sm font-medium text-red-500">{statusError}</p>
-          <button
-            onClick={() => setStatusError("")}
-            className="text-red-300 hover:text-red-500 text-lg leading-none"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <Toast
+        message={deleteResult === 'success' ? '삭제가 완료되었습니다.' : deleteResult ? '삭제 중 오류가 발생했어요. 다시 시도해주세요.' : null}
+        type={deleteResult === 'success' ? 'success' : 'error'}
+        onDismiss={() => setDeleteResult(null)}
+      />
+      <Toast message={statusError} type="error" onDismiss={() => setStatusError("")} />
 
       <CoolingOffDetailPanel
         item={selectedItem}
