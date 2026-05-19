@@ -102,7 +102,6 @@ function isValidExpireAt(str) {
 }
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif']);
 const MAX_IMG_SIZE = 5 * 1024 * 1024; // 5MB
 
 // POST /api/items — 새 항목 등록 (multipart/form-data)
@@ -149,11 +148,7 @@ export async function POST(request) {
   // 이미지 — sharp 정규화 후 GCS 업로드
   let imagePath = null;
   if (imageFile && imageFile.size > 0) {
-    const ext = imageFile.name?.split('.').pop()?.toLowerCase() ?? '';
-    const typeOk = imageFile.type
-      ? ALLOWED_MIME_TYPES.has(imageFile.type)
-      : ALLOWED_EXTENSIONS.has(ext);
-    if (!typeOk || imageFile.size > MAX_IMG_SIZE) {
+    if (!ALLOWED_MIME_TYPES.has(imageFile.type) || imageFile.size > MAX_IMG_SIZE) {
       return errorResponse('INVALID_IMAGE');
     }
     const raw = Buffer.from(await imageFile.arrayBuffer());
