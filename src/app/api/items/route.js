@@ -69,7 +69,9 @@ export async function GET(request) {
         [user.user_id],
       ),
     ]);
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console -- server-side diagnostics for production failures
+    console.error('[items][GET] failed to fetch items:', err);
     return errorResponse('SERVER_ERROR');
   }
 
@@ -109,7 +111,9 @@ export async function POST(request) {
   let formData;
   try {
     formData = await request.formData();
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console -- server-side diagnostics for malformed multipart requests
+    console.error('[items][POST] failed to parse multipart form-data:', err);
     return errorResponse('REQUIRED_FIELD');
   }
 
@@ -153,31 +157,52 @@ export async function POST(request) {
         .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toBuffer();
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console -- server-side diagnostics for image processing failures
+      console.error('[items][POST] sharp processing failed:', {
+        message: err instanceof Error ? err.message : String(err),
+        mimeType: imageFile.type,
+        size: imageFile.size,
+      });
       return errorResponse('INVALID_IMAGE');
     }
     try {
       imagePath = await uploadImage(processed);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console -- server-side diagnostics for cloud upload failures
+      console.error('[items][POST] GCS upload failed:', {
+        message: err instanceof Error ? err.message : String(err),
+        hasBucketName: Boolean(process.env.GCS_BUCKET_NAME),
+        hasGoogleCredentialsPath: Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+        credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || null,
+      });
       return errorResponse('INVALID_IMAGE');
     }
   }
 
   const expireDate = new Date(expireAtStr);
 
-  const result = await query(
-    `INSERT INTO items (user_id, category_id, name, price, image, memo, impulse_score, expire_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [user.user_id, categoryId, name, price, imagePath, memo, impulseScore, expireDate],
-  );
+  let result;
+  let newItem;
+  try {
+    result = await query(
+      `INSERT INTO items (user_id, category_id, name, price, image, memo, impulse_score, expire_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user.user_id, categoryId, name, price, imagePath, memo, impulseScore, expireDate],
+    );
 
-  const [newItem] = await query(
-    `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
-            i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at
-     FROM items i JOIN categories c ON i.category_id = c.id
-     WHERE i.id = ?`,
-    [result.insertId],
-  );
+    [newItem] = await query(
+      `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
+              i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at
+       FROM items i JOIN categories c ON i.category_id = c.id
+       WHERE i.id = ?`,
+      [result.insertId],
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console -- server-side diagnostics for database write failures
+    console.error('[items][POST] database write failed:', err);
+    return errorResponse('SERVER_ERROR');
+  }
 
   return successResponse(newItem, 'Item created.', 201);
 }
