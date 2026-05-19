@@ -45,4 +45,3 @@ export async function getConnection() {
   return pool.getConnection();
 }
 
-export default pool;

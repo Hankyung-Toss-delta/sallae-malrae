@@ -46,6 +46,7 @@ export function CoolingOffCard({ item, onClick }) {
                 src={image}
                 alt={name}
                 fill
+                sizes="90px"
                 className="object-cover"
               />
             ) : (
