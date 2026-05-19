@@ -181,6 +181,22 @@ export default function CoolingOffDetailPanel({
 
               <div className="flex-1 overflow-y-auto px-7 min-h-0">
                 <div className="flex flex-col gap-6">
+                {!isDecided && (
+                  <div className="rounded-xl bg-[#F8F1E4] px-4 py-3">
+                    <p className="text-center text-sm text-[#7E6438]">
+                      <span className="font-semibold text-[#5C4827]">
+                        {new Date(item.expire_at).toLocaleString('ko-KR', {
+                          timeZone: 'Asia/Seoul',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          hour12: true,
+                        })}
+                      </span>
+                      까지 멈춰볼게요
+                    </p>
+                  </div>
+                )}
                 <div className="relative w-full h-[220px] bg-white rounded-2xl overflow-hidden">
                   {item.image ? (
                     <Image
@@ -217,18 +233,6 @@ export default function CoolingOffDetailPanel({
                 </div>
                 </div>
               </div>
-
-              {!isDecided && (
-                <p className="px-7 pb-2 text-sm text-center text-gray-400">
-                  {new Date(item.expire_at).toLocaleString('ko-KR', {
-                    timeZone: 'Asia/Seoul',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })} 마감
-                </p>
-              )}
 
               {!isDecided && (
                 <div className="px-7 py-5 flex gap-3 flex-shrink-0">
