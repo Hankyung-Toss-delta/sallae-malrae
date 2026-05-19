@@ -40,7 +40,7 @@ export default function LevelShareModal({ open, onClose, user, summary }) {
   if (!open) return null;
 
   const level = user?.level ?? 1;
-  const { name: title, description } = getLevelMeta(level);
+  const { name: title, description, image } = getLevelMeta(level);
 
   const passedCount = summary?.passed_count ?? 0;
   const successRate = summary?.success_rate ?? 0;
@@ -109,9 +109,7 @@ export default function LevelShareModal({ open, onClose, user, summary }) {
           </span>
 
           <div className="mt-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-[0_8px_20px_rgba(33,70,56,0.10)]">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#E8B341] text-3xl">
-              🏛️
-            </div>
+            <img src={image} alt={title} className="h-16 w-16 rounded-full object-cover" />
           </div>
 
           <h2 className="mt-4 text-lg font-bold text-[#1D2A21]">{title}</h2>

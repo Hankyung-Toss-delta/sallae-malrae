@@ -1,13 +1,9 @@
-const LEVEL_EMOJI = {
-  1: "🌱",
-  2: "💪",
-  3: "🏅",
-  4: "💰",
-  5: "👑",
-};
+import { getLevelMeta } from "@/lib/level";
 
 export default function LevelUpModal({ levelInfo, onClose }) {
   if (!levelInfo) return null;
+
+  const { image } = getLevelMeta(levelInfo.level);
 
   return (
     <>
@@ -28,7 +24,7 @@ export default function LevelUpModal({ levelInfo, onClose }) {
         onClick={onClose}
       >
         <div style={{ animation: 'levelUpPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
-          <span style={{ fontSize: '110px', lineHeight: 1 }}>{LEVEL_EMOJI[levelInfo.level]}</span>
+          <img src={image} alt={levelInfo.name} style={{ width: '110px', height: '110px', objectFit: 'cover', borderRadius: '50%' }} />
         </div>
         <div
           className="mt-6 flex flex-col items-center gap-2"
