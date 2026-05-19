@@ -11,13 +11,13 @@ export function AuthProvider({ children }) {
 
   const login = (userInfo) => setUser(userInfo);
 
+  // 호출부는 logout 이후 window.location.replace로 전체 새로고침을 트리거함.
+  // 새로고침이 React 트리/진행 중 fetch/refreshPromise를 모두 폐기하므로 setUser(null) 불필요.
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
     } catch {
-      // 네트워크 오류여도 클라이언트 상태는 비움(사용자 의도 보존).
-    } finally {
-      setUser(null);
+      // 네트워크 오류여도 호출부는 그대로 진행(사용자 의도 보존).
     }
   };
 

@@ -1,12 +1,10 @@
-// Auth Guard — 인증 여부에 따라 라우트 접근을 제어합니다.
-// 파일명은 Next.js 16+ 컨벤션(proxy)을 따르며, 요청을 다른 서버로 전달하는 프록시 역할이 아닙니다.
 import { NextResponse } from 'next/server';
 import { verifyAccessTokenEdge } from '@/lib/jwt';
 
 const PROTECTED = ['/dashboard', '/coolingoff'];
 const AUTH_ONLY = ['/auth/login', '/auth/signup'];
 
-export async function proxy(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('accessToken')?.value;
 
