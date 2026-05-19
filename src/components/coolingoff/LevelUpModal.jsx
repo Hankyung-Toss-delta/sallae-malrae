@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 const LEVEL_EMOJI = {
   1: "🌱",
   2: "💪",
@@ -9,12 +7,6 @@ const LEVEL_EMOJI = {
 };
 
 export default function LevelUpModal({ levelInfo, onClose }) {
-  useEffect(() => {
-    if (!levelInfo) return;
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [levelInfo, onClose]);
-
   if (!levelInfo) return null;
 
   return (

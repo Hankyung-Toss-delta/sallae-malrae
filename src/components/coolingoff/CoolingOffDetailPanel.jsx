@@ -41,12 +41,6 @@ export default function CoolingOffDetailPanel({
     prevCelebrationRef.current = celebration;
   }, [celebration]);
 
-  useEffect(() => {
-    if (!celebration) return;
-    const timer = setTimeout(() => setCelebration(null), 2500);
-    return () => clearTimeout(timer);
-  }, [celebration]);
-
   return (
     <>
       {celebration && (
