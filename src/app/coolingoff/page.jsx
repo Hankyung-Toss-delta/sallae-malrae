@@ -29,13 +29,12 @@ export default function CoolingOffPage() {
   const [isPendingExpanded, setIsPendingExpanded] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
-  const [shouldRefetch, setShouldRefetch] = useState(0);
   const [levelUpInfo, setLevelUpInfo] = useState(null);
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const carouselRef = useRef(null);
 
-  useEffect(() => {
+  const fetchItems = useCallback(() => {
     fetch('/api/items?status=all', { method: 'GET' })
       .then((r) => r.json())
       .then((json) => {
@@ -48,7 +47,11 @@ export default function CoolingOffPage() {
         setItems(json.data.items.map(item => ({ ...item, days_left: Number(item.days_left) })));
       })
       .catch(() => setFetchError(true));
-  }, [shouldRefetch, router]);
+  }, [router]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   const pendingItems = items.filter(
     (item) => item.days_left === 0 && item.status === "waiting"
@@ -118,7 +121,7 @@ export default function CoolingOffPage() {
       await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
     } finally {
       setIsPanelOpen(false);
-      setShouldRefetch((n) => n + 1);
+      fetchItems();
     }
   };
 
@@ -138,7 +141,7 @@ export default function CoolingOffPage() {
     } catch {
       setStatusError("네트워크 오류가 발생했어요. 다시 시도해주세요.");
     } finally {
-      setShouldRefetch((n) => n + 1);
+      fetchItems();
       setIsPanelOpen(false);
       setIsPendingExpanded(false);
       setCarouselIndex(0);
