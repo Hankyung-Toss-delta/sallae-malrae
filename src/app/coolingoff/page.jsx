@@ -10,6 +10,7 @@ import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel
 import LevelUpModal from "@/components/coolingoff/LevelUpModal";
 import PendingItemsSection from "@/components/coolingoff/PendingItemsSection";
 import CoolingOffFilterBar from "@/components/coolingoff/CoolingOffFilterBar";
+import Toast from "@/components/coolingoff/Toast";
 import { getLevelMeta } from "@/lib/level";
 
 export default function CoolingOffPage() {
@@ -24,7 +25,6 @@ export default function CoolingOffPage() {
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const [deleteResult, setDeleteResult] = useState(null);
-  const [isDeleteLeaving, setIsDeleteLeaving] = useState(false);
   const carouselRef = useRef(null);
 
   const fetchItems = useCallback(() => {
@@ -79,20 +79,6 @@ export default function CoolingOffPage() {
   };
 
   const handlePanelClose = () => setIsPanelOpen(false);
-
-  const dismissDeleteToast = useCallback(() => {
-    setIsDeleteLeaving(true);
-    setTimeout(() => {
-      setDeleteResult(null);
-      setIsDeleteLeaving(false);
-    }, 280);
-  }, []);
-
-  useEffect(() => {
-    if (!deleteResult) return;
-    const timer = setTimeout(dismissDeleteToast, 1500);
-    return () => clearTimeout(timer);
-  }, [deleteResult, dismissDeleteToast]);
 
   const handleCelebrationEnd = useCallback(() => {
     if (pendingLevelUpRef.current) {
@@ -190,38 +176,12 @@ export default function CoolingOffPage() {
 
       <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
 
-      {deleteResult && (
-        <div
-          className={`fixed top-6 inset-x-0 mx-auto w-fit z-[70] flex items-center gap-3 rounded-2xl px-5 py-3 shadow-lg ${
-            deleteResult === 'success'
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}
-          style={{ animation: isDeleteLeaving ? 'slideUp 0.28s ease-in forwards' : 'slideDown 0.3s ease-out' }}
-        >
-          <p className={`text-sm font-medium whitespace-nowrap ${deleteResult === 'success' ? 'text-green-600' : 'text-red-500'}`}>
-            {deleteResult === 'success' ? '삭제가 완료되었습니다.' : '삭제 중 오류가 발생했어요. 다시 시도해주세요.'}
-          </p>
-          <button
-            onClick={dismissDeleteToast}
-            className={`text-lg leading-none ${deleteResult === 'success' ? 'text-green-300 hover:text-green-500' : 'text-red-300 hover:text-red-500'}`}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {statusError && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-3 shadow-lg">
-          <p className="text-sm font-medium text-red-500">{statusError}</p>
-          <button
-            onClick={() => setStatusError("")}
-            className="text-red-300 hover:text-red-500 text-lg leading-none"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <Toast
+        message={deleteResult === 'success' ? '삭제가 완료되었습니다.' : deleteResult ? '삭제 중 오류가 발생했어요. 다시 시도해주세요.' : null}
+        type={deleteResult === 'success' ? 'success' : 'error'}
+        onDismiss={() => setDeleteResult(null)}
+      />
+      <Toast message={statusError} type="error" onDismiss={() => setStatusError("")} />
 
       <CoolingOffDetailPanel
         item={selectedItem}
