@@ -27,9 +27,9 @@ export default function CoolingOffDetailPanel({
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [celebration, setCelebration] = useState(null);
-  const daysLeft = item?.days_left ?? 0;
   const timeLeftLabel = item?.time_left_label ?? 'D-day';
   const isDecided = item?.status === "passed" || item?.status === "bought";
+  const isExpired = !isDecided && item?.expire_at != null && new Date(item.expire_at) <= new Date();
   const onCelebrationEndRef = useRef(onCelebrationEnd);
   useEffect(() => { onCelebrationEndRef.current = onCelebrationEnd; });
 
@@ -139,7 +139,7 @@ export default function CoolingOffDetailPanel({
                       <span className="bg-pink-100 text-pink-400 text-xs font-bold px-3 py-1 rounded-full">
                         완료
                       </span>
-                    ) : daysLeft === 0 ? (
+                    ) : isExpired ? (
                       <span className="bg-orange-100 text-orange-500 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
                         대기
                       </span>
