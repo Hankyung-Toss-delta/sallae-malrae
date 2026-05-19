@@ -5,7 +5,7 @@ export default function LandingQuote() {
       className="landing-section snap-section relative min-h-screen flex items-center justify-center overflow-hidden"
     >
       <div className="section-bg absolute inset-0" />
-      <div className="section-content relative z-10 text-white text-center px-4 md:px-6 mx-4 md:mx-auto bg-[#1a3a2e] w-[1440px] rounded-3xl py-10 md:py-16">
+      <div className="section-content relative z-10 text-white text-center px-4 md:px-6 mx-4 md:mx-auto bg-brand-dark w-[1440px] rounded-3xl py-10 md:py-16">
         <p className="text-[12px] md:text-4xl font-bold leading-relaxed mb-6">
           &ldquo;
           <span className="underline decoration-dotted decoration-1.5 md:decoration-4 underline-offset-6 md:underline-offset-14">

@@ -34,7 +34,7 @@ export default function LandingHero() {
         className="absolute top-[61px] left-0 w-full overflow-hidden pointer-events-none select-none"
       >
         <span
-          className="block font-black text-[#4a9f7e] leading-none whitespace-nowrap w-full text-center opacity-8"
+          className="block font-black text-brand-green leading-none whitespace-nowrap w-full text-center opacity-8"
           style={{ fontSize: "28vw" }}
         >
           살래말래
@@ -65,12 +65,12 @@ export default function LandingHero() {
       </div>
 
       <div className="section-content relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center pt-16">
-        <p className="text-xl md:text-6xl font-bold text-[#1a3a2e] mb-3">
+        <p className="text-xl md:text-6xl font-bold text-brand-dark mb-3">
           오늘 사고 싶은 그거,
         </p>
 
-        <h1 className="text-2xl md:text-6xl font-extrabold text-[#4a9f7e] leading-tight mb-8 flex items-center gap-3 flex-wrap justify-center">
-          <span className="inline-flex items-center rounded-xl md:rounded-2xl mb-3 md:mb-0 px-3 md:px-5 py-1.5 mt-4 gap-3 shadow-2xl shadow-gray-500/80 bg-[#F1F1EA] rotate-[-10deg]">
+        <h1 className="text-2xl md:text-6xl font-extrabold text-brand-green leading-tight mb-8 flex items-center gap-3 flex-wrap justify-center">
+          <span className="inline-flex items-center rounded-xl md:rounded-2xl mb-3 md:mb-0 px-3 md:px-5 py-1.5 mt-4 gap-3 shadow-2xl shadow-gray-500/80 bg-cream rotate-[-10deg]">
             <span className="text-4xl md:text-6xl">{day}일</span>
             <div className="flex flex-col gap-1">
               <button
@@ -92,7 +92,7 @@ export default function LandingHero() {
           뒤에도 사고 싶을까요?
         </h1>
 
-        <div className="flex flex-col gap-2 text-sm text-[#1a3a2e] mb-12 items-center text-center md:text-xl md:w-128 md:items-stretch md:text-left">
+        <div className="flex flex-col gap-2 text-sm text-brand-dark mb-12 items-center text-center md:text-xl md:w-128 md:items-stretch md:text-left">
           <p className="md:self-start">
             "내가 정한 <span className="font-bold">쿨링오프</span> 기간,
           </p>
@@ -104,13 +104,13 @@ export default function LandingHero() {
         <div className="flex gap-3 md:gap-5">
           <Link
             href="/auth/login"
-            className="px-5 py-2.5 text-sm border-2 border-[#1a3a2e] text-[#1a3a2e] rounded-full font-bold bg-[#f1f1ea] shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:-translate-x-1 hover:shadow-lg md:px-8 md:py-4 md:text-lg"
+            className="px-5 py-2.5 text-sm border-2 border-brand-dark text-brand-dark rounded-full font-bold bg-cream shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:-translate-x-1 hover:shadow-lg md:px-8 md:py-4 md:text-lg"
           >
             시작하기
           </Link>
           <button
             onClick={scrollToCoolingOff}
-            className="px-5 py-2.5 text-sm bg-[#1a3a2e] text-[#f1f1ea] rounded-full font-bold shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:-translate-x-1 hover:shadow-lg md:px-8 md:py-4 md:text-lg"
+            className="px-5 py-2.5 text-sm bg-brand-dark text-cream rounded-full font-bold shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:-translate-x-1 hover:shadow-lg md:px-8 md:py-4 md:text-lg"
           >
             쿨링오프가 뭐예요?
           </button>

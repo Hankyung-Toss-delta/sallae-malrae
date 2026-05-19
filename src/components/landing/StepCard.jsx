@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function StepCard({ step, title, subtitle, description, isActive, imageSrc, imageStyle }) {
   const bg = isActive
-    ? "bg-[#89928f] text-white"
+    ? "bg-brand-gray text-white"
     : step === 1
     ? "bg-[#c4debe] text-[#3a3a3a]"
     : "bg-[#e9f0e9] text-[#3a3a3a]";
