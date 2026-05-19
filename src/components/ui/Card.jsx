@@ -1,19 +1,5 @@
 import Image from 'next/image'
 
-export const CATEGORY_LABELS = {
-  1: "패션/잡화",
-  2: "전자기기",
-  3: "뷰티/헬스",
-  4: "식품",
-  5: "인테리어",
-  6: "기타",
-};
-
-export function calcDaysLeft(expireAt) {
-  const diff = new Date(expireAt) - new Date();
-  return diff <= 0 ? 0 : Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
 export default function Card({
   as: Component = "section",
   children,
@@ -27,10 +13,8 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_id, expire_at, memo, impulse_score, image } =
+  const { name, price, category_name, days_left, status, memo, impulse_score, image } =
     item;
-
-  const daysLeft = calcDaysLeft(expire_at);
 
   return (
     <div
@@ -40,23 +24,28 @@ export function CoolingOffCard({ item, onClick }) {
       <div className="bg-[#F1F1EA]">
         <div className="relative flex items-center gap-4 px-4 pt-4 pb-3">
           <div className="absolute top-3 right-3">
-            {daysLeft === 0 ? (
+            {status === "passed" || status === "bought" ? (
               <span className="bg-pink-100 text-pink-400 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 완료
               </span>
-            ) : (
+            ) : days_left === 0 ? (
               <span className="bg-orange-100 text-orange-500 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                D-{daysLeft}
+                대기
+              </span>
+            ) : (
+              <span className="bg-green-100 text-green-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                D-{days_left}
               </span>
             )}
           </div>
 
-          <div className="w-[90px] h-[90px] rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
+          <div className="relative w-[90px] h-[90px] rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
             {image ? (
               <Image
                 src={image}
                 alt={name}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             ) : (
               <div className="w-full h-full bg-gray-200" />
@@ -68,7 +57,7 @@ export function CoolingOffCard({ item, onClick }) {
               {name}
             </p>
             <p className="text-xs text-gray-400">
-              {CATEGORY_LABELS[category_id] ?? category_id}
+              {category_name}
             </p>
             <p className="font-bold text-[15px] text-gray-900 mt-1">
               ₩{price.toLocaleString()}
@@ -78,7 +67,7 @@ export function CoolingOffCard({ item, onClick }) {
       </div>
 
       <div className="border-t border-gray-100 px-4 py-2.5 flex items-center justify-between">
-        <p className="text-sm text-gray-500 truncate mr-4">&quot;{memo}&quot;</p>
+        <p className="text-sm text-gray-500 truncate mr-4">&quot;{memo ?? "메모 없음"}&quot;</p>
         <div className="flex items-center gap-1 flex-shrink-0">
           <span className="text-base">🔥</span>
           <span className="text-sm font-semibold text-gray-700">

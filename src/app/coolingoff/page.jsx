@@ -1,116 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { CoolingOffCard, calcDaysLeft } from "@/components/ui/Card";
+import { CoolingOffCard } from "@/components/ui/Card";
 import CoolingOffDetailPanel from "@/components/coolingoff/CoolingOffDetailPanel";
+import LevelUpModal from "@/components/coolingoff/LevelUpModal";
+import { getLevelMeta } from "@/lib/level";
 
 const CAROUSEL_GAP = 16;
 const CAROUSEL_VISIBLE = 3;
-
-const INITIAL_ITEMS = [
-  {
-    id: 1,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 2,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-16T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 3,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-20T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 4,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-22T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 5,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 6,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 7,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 8,
-    image: null,
-    status: "waiting",
-  },
-  {
-    id: 8,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 5,
-    image: null,
-    status: "passed",
-  },
-  {
-    id: 9,
-    name: "아디다스 슈퍼스타 2",
-    category_id: 1,
-    price: 180000,
-    expire_at: "2026-05-10T00:00:00.000Z",
-    memo: "스트레스 받아서 그냥 지르고 싶어 ㅠㅠ",
-    impulse_score: 9,
-    image: null,
-    status: "bought",
-  },
-];
 
 const FILTERS = [
   { label: "참는중", value: "ongoing" },
@@ -118,17 +19,39 @@ const FILTERS = [
 ];
 
 export default function CoolingOffPage() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const router = useRouter();
+  const [items, setItems] = useState([]);
+  const [fetchError, setFetchError] = useState(false);
   const [filter, setFilter] = useState("ongoing");
   const [completedSubFilter, setCompletedSubFilter] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isPendingExpanded, setIsPendingExpanded] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
+  const [shouldRefetch, setShouldRefetch] = useState(0);
+  const [levelUpInfo, setLevelUpInfo] = useState(null);
+  const pendingLevelUpRef = useRef(null);
+  const [statusError, setStatusError] = useState("");
   const carouselRef = useRef(null);
 
+  useEffect(() => {
+    fetch('/api/items?status=all', { method: 'GET' })
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) {
+          if (json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+          setFetchError(true);
+          return;
+        }
+        setFetchError(false);
+        setItems(json.data.items.map(item => ({ ...item, days_left: Number(item.days_left) })));
+      })
+      .catch(() => setFetchError(true));
+  }, [shouldRefetch, router]);
+
   const pendingItems = items.filter(
-    (item) => calcDaysLeft(item.expire_at) === 0 && item.status === "waiting"
+    (item) => item.days_left === 0 && item.status === "waiting"
   );
 
   const maxCarouselIndex = Math.max(0, pendingItems.length - CAROUSEL_VISIBLE);
@@ -136,7 +59,6 @@ export default function CoolingOffPage() {
   useEffect(() => {
     const el = carouselRef.current;
     if (!el) return;
-
     const compute = () => {
       const w = el.offsetWidth;
       if (w === 0) return;
@@ -144,16 +66,18 @@ export default function CoolingOffPage() {
         (w - CAROUSEL_GAP * (CAROUSEL_VISIBLE - 1)) / CAROUSEL_VISIBLE + CAROUSEL_GAP
       );
     };
-
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
   }, [pendingItems.length]);
 
+  const handlePrev = () => setCarouselIndex((i) => Math.max(0, i - 1));
+  const handleNext = () => setCarouselIndex((i) => Math.min(maxCarouselIndex, i + 1));
+
   const filtered = items
     .filter((item) => {
-      const daysLeft = calcDaysLeft(item.expire_at);
+      const daysLeft = item.days_left;
       if (daysLeft === 0 && item.status === "waiting") return false;
 
       if (filter === "ongoing") return item.status === "waiting" && daysLeft > 0;
@@ -164,7 +88,7 @@ export default function CoolingOffPage() {
       }
       return false;
     })
-    .sort((a, b) => calcDaysLeft(a.expire_at) - calcDaysLeft(b.expire_at));
+    .sort((a, b) => a.days_left - b.days_left);
 
   const handleFilterChange = (value) => {
     setFilter(value);
@@ -172,7 +96,7 @@ export default function CoolingOffPage() {
   };
 
   const handleCardClick = (item) => {
-    if (selectedItem?.id === item.id && isPanelOpen) {
+    if (selectedItem?.item_id === item.item_id && isPanelOpen) {
       setIsPanelOpen(false);
       return;
     }
@@ -182,28 +106,58 @@ export default function CoolingOffPage() {
 
   const handlePanelClose = () => setIsPanelOpen(false);
 
-  const handleStatusChange = (id, status) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
-    );
-    setSelectedItem((prev) => (prev?.id === id ? { ...prev, status } : prev));
-    setIsPanelOpen(false);
-    setCarouselIndex(0);
+  const handleCelebrationEnd = useCallback(() => {
+    if (pendingLevelUpRef.current) {
+      setLevelUpInfo(pendingLevelUpRef.current);
+      pendingLevelUpRef.current = null;
+    }
+  }, []);
+
+  const handleDelete = async (itemId) => {
+    try {
+      await fetch(`/api/items/${itemId}`, { method: 'DELETE' });
+    } finally {
+      setIsPanelOpen(false);
+      setShouldRefetch((n) => n + 1);
+    }
   };
 
-  const handlePrev = () => setCarouselIndex((i) => Math.max(0, i - 1));
-  const handleNext = () =>
-    setCarouselIndex((i) => Math.min(maxCarouselIndex, i + 1));
+  const handleStatusChange = async (itemId, status) => {
+    setStatusError("");
+    try {
+      const res = await fetch(`/api/items/${itemId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (!json.success && json.code === 'UNAUTHORIZED') { router.push('/auth/login'); return; }
+      if (json.data?.updatedStats?.levelUp) {
+        pendingLevelUpRef.current = getLevelMeta(json.data.updatedStats.level);
+      }
+    } catch {
+      setStatusError("네트워크 오류가 발생했어요. 다시 시도해주세요.");
+    } finally {
+      setShouldRefetch((n) => n + 1);
+      setIsPanelOpen(false);
+      setIsPendingExpanded(false);
+      setCarouselIndex(0);
+    }
+  };
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen flex flex-col">
+
       <Header activeMenu="coolingoff" />
 
-      <section className="max-w-[1100px] mx-auto px-6 py-30">
+      <section className="flex-1 max-w-[1100px] mx-auto px-6 py-30 w-full">
 
         {/* 메인 헤더 */}
         <div className="flex items-start justify-between mb-8">
           <div>
+            <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#8FA58D]">
+              COOLING OFF
+            </p>
             <h1 className="text-3xl font-bold text-gray-900">내 쿨링오프 목록</h1>
             <p className="text-sm text-gray-400 mt-1">
               지금 말고 내일 생각해도 늦지 않아요.
@@ -228,55 +182,78 @@ export default function CoolingOffPage() {
               </span>
             </div>
 
-            {pendingItems.length <= CAROUSEL_VISIBLE ? (
-              <div className="grid grid-cols-3 gap-4">
-                {pendingItems.map((item) => (
-                  <CoolingOffCard key={item.id} item={item} onClick={handleCardClick} />
+            {/* 모바일: 1개 + 펼치기 버튼 */}
+            <div className="md:hidden">
+              <div className="flex flex-col gap-4">
+                {(isPendingExpanded ? pendingItems : pendingItems.slice(0, 1)).map((item) => (
+                  <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
                 ))}
               </div>
-            ) : (
-              <div className="relative">
-                {carouselIndex > 0 && (
-                  <button
-                    onClick={handlePrev}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
-                  >
-                    ‹
-                  </button>
-                )}
-                <div className="overflow-hidden" ref={carouselRef}>
-                  <div
-                    className="flex transition-transform duration-500 ease-in-out"
-                    style={{
-                      gap: `${CAROUSEL_GAP}px`,
-                      transform: `translateX(-${carouselIndex * carouselStep}px)`,
-                    }}
-                  >
-                    {pendingItems.map((item) => (
-                      <div
-                        key={item.id}
-                        style={{
-                          width: carouselStep > 0
-                            ? `${carouselStep - CAROUSEL_GAP}px`
-                            : "calc(33.333% - 10.667px)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <CoolingOffCard item={item} onClick={handleCardClick} />
-                      </div>
-                    ))}
-                  </div>
+              {pendingItems.length > 1 && (
+                <button
+                  onClick={() => setIsPendingExpanded((v) => !v)}
+                  className="mt-4 mx-auto flex items-center gap-1.5 text-xs font-medium text-orange-400 hover:text-orange-500 transition-colors"
+                >
+                  {isPendingExpanded ? "접기" : `나머지 ${pendingItems.length - 1}개 보기`}
+                  <span className={`transition-transform duration-200 ${isPendingExpanded ? "rotate-180" : ""}`}>
+                    ▼
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* 데스크톱: 캐러셀 */}
+            <div className="hidden md:block">
+              {pendingItems.length <= CAROUSEL_VISIBLE ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {pendingItems.map((item) => (
+                    <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
+                  ))}
                 </div>
-                {carouselIndex < maxCarouselIndex && (
-                  <button
-                    onClick={handleNext}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            )}
+              ) : (
+                <div className="relative">
+                  {carouselIndex > 0 && (
+                    <button
+                      onClick={handlePrev}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
+                    >
+                      ‹
+                    </button>
+                  )}
+                  <div className="overflow-hidden" ref={carouselRef}>
+                    <div
+                      className="flex transition-transform duration-500 ease-in-out"
+                      style={{
+                        gap: `${CAROUSEL_GAP}px`,
+                        transform: `translateX(-${carouselIndex * carouselStep}px)`,
+                      }}
+                    >
+                      {pendingItems.map((item) => (
+                        <div
+                          key={item.item_id}
+                          style={{
+                            width: carouselStep > 0
+                              ? `${carouselStep - CAROUSEL_GAP}px`
+                              : "calc(33.333% - 10.667px)",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <CoolingOffCard item={item} onClick={handleCardClick} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {carouselIndex < maxCarouselIndex && (
+                    <button
+                      onClick={handleNext}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-9 h-9 bg-white rounded-full shadow-md text-gray-500 hover:text-gray-800 flex items-center justify-center text-lg transition-colors"
+                    >
+                      ›
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -341,20 +318,44 @@ export default function CoolingOffPage() {
         </div>
 
         {/* 카드 목록 */}
-        <div className="grid grid-cols-3 gap-4">
-          {filtered.map((item) => (
-            <CoolingOffCard key={item.id} item={item} onClick={handleCardClick} />
-          ))}
-        </div>
+        {fetchError ? (
+          <p className="text-sm text-gray-400 text-center py-8">목록을 불러오지 못했어요.</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">
+            {filter === "ongoing" ? "참는 중인 항목이 없어요." : "완료된 항목이 없어요."}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map((item) => (
+              <CoolingOffCard key={item.item_id} item={item} onClick={handleCardClick} />
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />
+
+      <LevelUpModal levelInfo={levelUpInfo} onClose={() => setLevelUpInfo(null)} />
+
+      {statusError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-3 shadow-lg">
+          <p className="text-sm font-medium text-red-500">{statusError}</p>
+          <button
+            onClick={() => setStatusError("")}
+            className="text-red-300 hover:text-red-500 text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <CoolingOffDetailPanel
         item={selectedItem}
         isOpen={isPanelOpen}
         onClose={handlePanelClose}
         onStatusChange={handleStatusChange}
+        onDelete={handleDelete}
+        onCelebrationEnd={handleCelebrationEnd}
       />
     </main>
   );

@@ -5,31 +5,43 @@ import { successResponse, errorResponse } from '@/lib/response';
 export async function GET(request, { params }) {
   const { shareToken } = await params;
 
-  const rows = await query(
-    'SELECT id, nickname, level FROM users WHERE share_token = ?',
-    [shareToken],
-  );
+  let rows;
+  try {
+    rows = await query(
+      'SELECT id, nickname, level FROM users WHERE share_token = ?',
+      [shareToken],
+    );
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
   if (rows.length === 0) return errorResponse('INVALID_SHARE_TOKEN');
 
   const user = rows[0];
 
-  const [statsRows, chartRows] = await Promise.all([
-    query(
-      `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
-              COALESCE(SUM(bought_count), 0)  AS bought_count,
-              COALESCE(SUM(saved_amount), 0)  AS saved_amount
-       FROM user_monthly_stats WHERE user_id = ?`,
-      [user.id],
-    ),
-    query(
-      `SELECT c.name, COUNT(*) AS count
-       FROM items i JOIN categories c ON i.category_id = c.id
-       WHERE i.user_id = ? AND i.status = 'passed'
-       GROUP BY i.category_id, c.name
-       ORDER BY count DESC`,
-      [user.id],
-    ),
-  ]);
+  let statsRows, chartRows;
+  try {
+    [statsRows, chartRows] = await Promise.all([
+      query(
+        `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
+                COALESCE(SUM(bought_count), 0)  AS bought_count,
+                COALESCE(SUM(saved_amount), 0)  AS saved_amount
+         FROM user_monthly_stats
+         WHERE user_id = ? AND year = YEAR(NOW()) AND month = MONTH(NOW())`,
+        [user.id],
+      ),
+      query(
+        `SELECT c.name, COUNT(*) AS count
+         FROM items i JOIN categories c ON i.category_id = c.id
+         WHERE i.user_id = ? AND i.status = 'passed'
+           AND YEAR(i.decided_at) = YEAR(NOW()) AND MONTH(i.decided_at) = MONTH(NOW())
+         GROUP BY i.category_id, c.name
+         ORDER BY count DESC`,
+        [user.id],
+      ),
+    ]);
+  } catch {
+    return errorResponse('SERVER_ERROR');
+  }
 
   const stats = statsRows[0];
   const passedCount = Number(stats.passed_count);
@@ -48,9 +60,9 @@ export async function GET(request, { params }) {
     {
       nickname: user.nickname,
       level: user.level,
-      summary: { passed_count: passedCount, saved_amount: savedAmount, success_rate: successRate },
+      summary: { passed_count: passedCount, bought_count: boughtCount, saved_amount: savedAmount, success_rate: successRate },
       categoryChart,
     },
-    '공유 페이지를 불러왔습니다.',
+    'Share page retrieved.',
   );
 }
