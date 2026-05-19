@@ -25,8 +25,6 @@ export default function CoolingOffPage() {
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const [deleteResult, setDeleteResult] = useState(null);
-  const carouselRef = useRef(null);
-
   const fetchItems = useCallback(() => {
     fetch('/api/items?status=all', { method: 'GET' })
       .then((r) => r.json())
@@ -78,8 +76,6 @@ export default function CoolingOffPage() {
     setSelectedItem(item);
     setIsPanelOpen(true);
   };
-
-  const handlePanelClose = () => setIsPanelOpen(false);
 
   const handleCelebrationEnd = useCallback(() => {
     if (pendingLevelUpRef.current) {
