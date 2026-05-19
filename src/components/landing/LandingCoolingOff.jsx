@@ -47,9 +47,9 @@ export default function LandingCoolingOff() {
             <span className="text-[#2f80e0]">식히세요.</span>
           </h2>
 
-          <button className="cooling-text w-full py-4 bg-gray-100 text-gray-500 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+          <p className="cooling-text w-full py-4 bg-gray-100 text-gray-500 rounded-xl text-sm font-medium text-center">
             쿨링오프 경제학적 의미 설명
-          </button>
+          </p>
         </div>
       </div>
     </section>
