@@ -1,58 +1,73 @@
-"use client";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
-import { useAuth } from "@/contexts/AuthContext";
+import { query } from "@/lib/db";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Card from "@/components/ui/Card";
-import ErrorAlert from "@/components/ui/ErrorAlert";
 import DashboardContent from "@/components/dashboard/DashboardContent";
-import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const { fetchWithRefresh } = useAuth();
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+  const { user_id } = jwt.decode(token);
 
-  useEffect(() => {
-    let cancelled = false;
+  const [userRows, statsRows, recentItems, expiredRows, chartRows] = await Promise.all([
+    query("SELECT nickname, level FROM users WHERE id = ?", [user_id]),
+    query(
+      `SELECT COALESCE(SUM(passed_count), 0) AS passed_count,
+              COALESCE(SUM(bought_count), 0)  AS bought_count,
+              COALESCE(SUM(saved_amount), 0)  AS saved_amount
+       FROM user_monthly_stats
+       WHERE user_id = ? AND year = YEAR(NOW()) AND month = MONTH(NOW())`,
+      [user_id],
+    ),
+    query(
+      `SELECT i.id AS item_id, i.name, i.price, i.expire_at, i.image,
+              i.category_id, c.name AS category_name,
+              GREATEST(0, FLOOR(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left
+       FROM items i JOIN categories c ON i.category_id = c.id
+       WHERE i.user_id = ? AND i.status = 'waiting' AND i.expire_at >= NOW()
+       ORDER BY i.expire_at ASC LIMIT 3`,
+      [user_id],
+    ),
+    query(
+      `SELECT COUNT(*) AS expired_count FROM items
+       WHERE user_id = ? AND status = 'waiting' AND expire_at < NOW()`,
+      [user_id],
+    ),
+    query(
+      `SELECT c.name, COUNT(*) AS count
+       FROM items i JOIN categories c ON i.category_id = c.id
+       WHERE i.user_id = ? AND i.status = 'passed'
+         AND YEAR(i.decided_at) = YEAR(NOW()) AND MONTH(i.decided_at) = MONTH(NOW())
+       GROUP BY i.category_id, c.name
+       ORDER BY count DESC`,
+      [user_id],
+    ),
+  ]);
 
-    (async () => {
-      try {
-        const res = await fetchWithRefresh("/api/dashboard");
-        if (res.status === 401) {
-          router.push("/auth/login");
-          return;
-        }
+  const { nickname, level } = userRows[0];
+  const stats = statsRows[0];
+  const passedCount = Number(stats.passed_count);
+  const boughtCount = Number(stats.bought_count);
+  const savedAmount = Number(stats.saved_amount);
 
-        const body = await res.json();
-        if (cancelled) return;
+  const total = passedCount + boughtCount;
+  const successRate = total === 0 ? 0 : Math.round((passedCount / total) * 1000) / 10;
 
-        if (!body.success) {
-          setErrorMessage("대시보드 정보를 불러오지 못했어요.");
-          return;
-        }
+  const categoryChart = chartRows.map((row) => ({
+    name: row.name,
+    count: Number(row.count),
+    ratio: passedCount === 0 ? 0 : Math.round((Number(row.count) / passedCount) * 1000) / 10,
+  }));
 
-        setData(body.data);
-      } catch {
-        if (!cancelled) {
-          setErrorMessage(
-            "네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.",
-          );
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchWithRefresh, router]);
+  const data = {
+    user: { nickname, level },
+    summary: { passed_count: passedCount, bought_count: boughtCount, saved_amount: savedAmount, success_rate: successRate },
+    recentItems,
+    expired_count: Number(expiredRows[0].expired_count),
+    categoryChart,
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -63,18 +78,7 @@ export default function DashboardPage() {
           <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#8FA58D]">
             DASHBOARD
           </p>
-
-          {isLoading && <DashboardSkeleton />}
-
-          {!isLoading && errorMessage && (
-            <Card className="p-6">
-              <ErrorAlert message={errorMessage} />
-            </Card>
-          )}
-
-          {!isLoading && !errorMessage && data && (
-            <DashboardContent data={data} />
-          )}
+          <DashboardContent data={data} />
         </div>
       </main>
 

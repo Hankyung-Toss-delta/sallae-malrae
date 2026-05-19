@@ -19,7 +19,20 @@ export async function middleware(request) {
     try {
       await verifyAccessTokenEdge(token);
     } catch {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      const refreshRes = await fetch(new URL('/api/auth/refresh', request.url), {
+        method: 'POST',
+        headers: { Cookie: request.headers.get('Cookie') || '' },
+      });
+
+      if (!refreshRes.ok) {
+        return NextResponse.redirect(new URL('/auth/login', request.url));
+      }
+
+      const res = NextResponse.next();
+      refreshRes.headers.getSetCookie().forEach((cookie) => {
+        res.headers.append('Set-Cookie', cookie);
+      });
+      return res;
     }
   }
 
