@@ -197,6 +197,7 @@ export default function CoolingOffDetailPanel({
                       src={item.image}
                       alt={item.name}
                       fill
+                      sizes="(max-width: 768px) 100vw, 500px"
                       className="object-contain"
                     />
                   ) : (
