@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { getShareData } from "@/lib/share";
 
-import ShareView from "./ShareView";
+import ShareView from "@/components/share/ShareView";
 
 export async function generateMetadata({ params }) {
   const { shareToken } = await params;
