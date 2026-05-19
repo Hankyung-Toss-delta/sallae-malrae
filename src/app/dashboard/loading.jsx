@@ -1,18 +1,8 @@
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
-
-import { getDashboardData } from "@/lib/dashboard";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import DashboardContent from "@/components/dashboard/DashboardContent";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 
-export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
-  const { user_id } = jwt.decode(token);
-
-  const data = await getDashboardData(user_id);
-
+export default function Loading() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header activeMenu="dashboard" />
@@ -22,7 +12,7 @@ export default async function DashboardPage() {
           <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#8FA58D]">
             DASHBOARD
           </p>
-          <DashboardContent data={data} />
+          <DashboardSkeleton />
         </div>
       </main>
 

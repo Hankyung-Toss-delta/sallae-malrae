@@ -1,18 +1,11 @@
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+"use client";
 
-import { getDashboardData } from "@/lib/dashboard";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import DashboardContent from "@/components/dashboard/DashboardContent";
+import Card from "@/components/ui/Card";
+import ErrorAlert from "@/components/ui/ErrorAlert";
 
-export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("accessToken")?.value;
-  const { user_id } = jwt.decode(token);
-
-  const data = await getDashboardData(user_id);
-
+export default function DashboardError() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header activeMenu="dashboard" />
@@ -22,7 +15,9 @@ export default async function DashboardPage() {
           <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#8FA58D]">
             DASHBOARD
           </p>
-          <DashboardContent data={data} />
+          <Card className="p-6">
+            <ErrorAlert message="대시보드 정보를 불러오지 못했어요." />
+          </Card>
         </div>
       </main>
 
