@@ -69,9 +69,7 @@ export async function GET(request) {
         [user.user_id],
       ),
     ]);
-  } catch (err) {
-    // eslint-disable-next-line no-console -- server-side diagnostics for production failures
-    console.error('[items][GET] failed to fetch items:', err);
+  } catch {
     return errorResponse('SERVER_ERROR');
   }
 
@@ -101,6 +99,7 @@ function isValidExpireAt(str) {
   return d.getTime() >= now + 60 * 60 * 1000 && d.getTime() <= now + 30 * 24 * 60 * 60 * 1000;
 }
 
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_IMG_SIZE = 5 * 1024 * 1024; // 5MB
 
 // POST /api/items — 새 항목 등록 (multipart/form-data)
@@ -111,9 +110,7 @@ export async function POST(request) {
   let formData;
   try {
     formData = await request.formData();
-  } catch (err) {
-    // eslint-disable-next-line no-console -- server-side diagnostics for malformed multipart requests
-    console.error('[items][POST] failed to parse multipart form-data:', err);
+  } catch {
     return errorResponse('REQUIRED_FIELD');
   }
 
@@ -147,7 +144,7 @@ export async function POST(request) {
   // 이미지 — sharp 정규화 후 GCS 업로드
   let imagePath = null;
   if (imageFile && imageFile.size > 0) {
-    if (imageFile.size > MAX_IMG_SIZE) {
+    if (!ALLOWED_MIME_TYPES.has(imageFile.type) || imageFile.size > MAX_IMG_SIZE) {
       return errorResponse('INVALID_IMAGE');
     }
     const raw = Buffer.from(await imageFile.arrayBuffer());
@@ -157,52 +154,31 @@ export async function POST(request) {
         .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 80 })
         .toBuffer();
-    } catch (err) {
-      // eslint-disable-next-line no-console -- server-side diagnostics for image processing failures
-      console.error('[items][POST] sharp processing failed:', {
-        message: err instanceof Error ? err.message : String(err),
-        mimeType: imageFile.type,
-        size: imageFile.size,
-      });
+    } catch {
       return errorResponse('INVALID_IMAGE');
     }
     try {
       imagePath = await uploadImage(processed);
-    } catch (err) {
-      // eslint-disable-next-line no-console -- server-side diagnostics for cloud upload failures
-      console.error('[items][POST] GCS upload failed:', {
-        message: err instanceof Error ? err.message : String(err),
-        hasBucketName: Boolean(process.env.GCS_BUCKET_NAME),
-        hasGoogleCredentialsPath: Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS),
-        credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || null,
-      });
+    } catch {
       return errorResponse('INVALID_IMAGE');
     }
   }
 
   const expireDate = new Date(expireAtStr);
 
-  let result;
-  let newItem;
-  try {
-    result = await query(
-      `INSERT INTO items (user_id, category_id, name, price, image, memo, impulse_score, expire_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [user.user_id, categoryId, name, price, imagePath, memo, impulseScore, expireDate],
-    );
+  const result = await query(
+    `INSERT INTO items (user_id, category_id, name, price, image, memo, impulse_score, expire_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [user.user_id, categoryId, name, price, imagePath, memo, impulseScore, expireDate],
+  );
 
-    [newItem] = await query(
-      `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
-              i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at
-       FROM items i JOIN categories c ON i.category_id = c.id
-       WHERE i.id = ?`,
-      [result.insertId],
-    );
-  } catch (err) {
-    // eslint-disable-next-line no-console -- server-side diagnostics for database write failures
-    console.error('[items][POST] database write failed:', err);
-    return errorResponse('SERVER_ERROR');
-  }
+  const [newItem] = await query(
+    `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
+            i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at
+     FROM items i JOIN categories c ON i.category_id = c.id
+     WHERE i.id = ?`,
+    [result.insertId],
+  );
 
   return successResponse(newItem, 'Item created.', 201);
 }
