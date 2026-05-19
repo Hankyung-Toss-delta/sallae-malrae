@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 const DEFAULT_NAV_ITEMS = [
@@ -27,7 +26,6 @@ export default function Header({
   transparent = false,
   className = "",
 }) {
-  const router = useRouter();
   const { logout } = useAuth();
   const [visible, setVisible] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -39,7 +37,9 @@ export default function Header({
     setIsLoggingOut(true);
     setMobileMenuOpen(false);
     await logout();
-    router.push("/auth/login");
+    // 전체 새로고침으로 React 트리/진행 중 fetch/refreshPromise를 완전히 폐기.
+    // router.push는 트리를 유지해 stale fetch가 401→refresh를 트리거하면 쿠키가 다시 박힘.
+    window.location.replace("/auth/login");
   };
 
   useEffect(() => {
