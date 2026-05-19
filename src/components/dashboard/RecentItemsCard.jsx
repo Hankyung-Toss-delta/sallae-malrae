@@ -26,7 +26,7 @@ export default function RecentItemsCard({ items }) {
             href="/coolingoff/new"
             className="rounded-full bg-[#8FA58D] px-4 py-1.5 text-xs font-medium text-white transition hover:bg-[#7C9279]"
           >
-            첫 항목 등록하기
+            항목 등록하기
           </Link>
         </div>
       ) : (
