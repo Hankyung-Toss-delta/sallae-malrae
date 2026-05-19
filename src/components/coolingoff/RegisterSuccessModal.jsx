@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-
 import Button from "@/components/ui/Button";
 
 export default function RegisterSuccessModal({ open, onConfirm }) {
@@ -34,21 +33,18 @@ export default function RegisterSuccessModal({ open, onConfirm }) {
           >
             🌱
           </span>
-
           <h2
             id="register-success-title"
             className="mt-4 text-xl font-bold text-[#1D2A21]"
           >
             등록했어요!
           </h2>
-
           <p className="mt-2 text-sm leading-relaxed text-[#55655A]">
             조금만 기다렸다 다시 생각해봐요.
             <br />
             함께 꾹 참아봅시다.
           </p>
         </div>
-
         <div className="px-6 pt-5 pb-6">
           <Button onClick={onConfirm} fullWidth size="lg">
             확인
