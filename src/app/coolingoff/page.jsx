@@ -25,8 +25,6 @@ export default function CoolingOffPage() {
   const pendingLevelUpRef = useRef(null);
   const [statusError, setStatusError] = useState("");
   const [deleteResult, setDeleteResult] = useState(null);
-  const carouselRef = useRef(null);
-
   const fetchItems = useCallback(() => {
     fetch('/api/items?status=all', { method: 'GET' })
       .then((r) => r.json())
@@ -46,15 +44,16 @@ export default function CoolingOffPage() {
     fetchItems();
   }, [fetchItems]);
 
+  const now = new Date();
+
   const pendingItems = items.filter(
-    (item) => item.days_left === 0 && item.status === "waiting"
+    (item) => item.status === "waiting" && new Date(item.expire_at) <= now
   );
 
   const filtered = items
     .filter((item) => {
-      const daysLeft = item.days_left;
-      if (daysLeft === 0 && item.status === "waiting") return false;
-      if (filter === "ongoing") return item.status === "waiting" && daysLeft > 0;
+      if (item.status === "waiting" && new Date(item.expire_at) <= now) return false;
+      if (filter === "ongoing") return item.status === "waiting";
       if (filter === "done") {
         if (item.status === "waiting") return false;
         if (completedSubFilter) return item.status === completedSubFilter;
@@ -77,8 +76,6 @@ export default function CoolingOffPage() {
     setSelectedItem(item);
     setIsPanelOpen(true);
   };
-
-  const handlePanelClose = () => setIsPanelOpen(false);
 
   const handleCelebrationEnd = useCallback(() => {
     if (pendingLevelUpRef.current) {

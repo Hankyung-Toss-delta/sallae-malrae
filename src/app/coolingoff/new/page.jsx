@@ -11,14 +11,8 @@ import ProductInfoCard from "@/components/coolingoff/ProductInfoCard";
 import CoolingOffDetailCard from "@/components/coolingoff/CoolingOffDetailCard";
 import RegisterSuccessModal from "@/components/coolingoff/RegisterSuccessModal";
 
-function buildExpireAt(dateStr, period, hour) {
-  const h = parseInt(hour, 10);
-  let hour24;
-  if (period === "오전") {
-    hour24 = h === 12 ? 0 : h;
-  } else {
-    hour24 = h === 12 ? 12 : h + 12;
-  }
+function buildExpireAt(dateStr, _period, hour) {
+  const hour24 = parseInt(hour, 10);
   return new Date(
     `${dateStr}T${String(hour24).padStart(2, "0")}:00:00+09:00`,
   ).toISOString();
