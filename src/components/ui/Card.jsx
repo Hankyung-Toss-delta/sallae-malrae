@@ -13,8 +13,9 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_name, days_left, time_left_label, status, memo, impulse_score, image } =
+  const { name, price, category_name, days_left, time_left_label, status, expire_at, memo, impulse_score, image } =
     item;
+  const isExpired = status === "waiting" && new Date(expire_at) <= new Date();
 
   return (
     <div
@@ -28,7 +29,7 @@ export function CoolingOffCard({ item, onClick }) {
               <span className="bg-pink-100 text-pink-400 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 완료
               </span>
-            ) : days_left === 0 ? (
+            ) : isExpired ? (
               <span className="bg-orange-100 text-orange-500 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 대기
               </span>
