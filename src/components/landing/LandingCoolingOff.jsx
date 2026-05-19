@@ -47,9 +47,21 @@ export default function LandingCoolingOff() {
             <span className="text-[#2f80e0]">식히세요.</span>
           </h2>
 
-          <p className="cooling-text w-full py-4 bg-gray-100 text-gray-500 rounded-xl text-sm font-medium text-center">
-            쿨링오프 경제학적 의미 설명
-          </p>
+          <div className="cooling-text w-full px-6 py-5 bg-gray-100 rounded-xl text-center space-y-3">
+            <div>
+              <p>
+                <span className="font-bold text-gray-800 text-xl tracking-tight">cool off</span>
+                <span className="text-gray-300 mx-2">|</span>
+                <span className="italic text-gray-600 text-base">&ldquo;차분해지다, 덜 흥분하다&rdquo;</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">— Oxford Learner&apos;s Dictionaries</p>
+            </div>
+            <hr className="border-gray-200" />
+            <p className="text-xs font-medium text-gray-400 leading-relaxed">
+              살래말래의 쿨링오프는 구매 욕구가 강하게 올라왔을 때 즉시 결제하지 않고,<br className="hidden sm:block" />
+              감정이 가라앉은 뒤 다시 판단하는 과정입니다.
+            </p>
+          </div>
         </div>
       </div>
     </section>
