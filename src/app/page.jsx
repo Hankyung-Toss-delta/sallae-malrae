@@ -45,7 +45,7 @@ export default function Home() {
   const [day, setDay] = useState(3);
   const [hoveredStep, setHoveredStep] = useState(null);
 
-  const incrementDay = () => setDay((d) => Math.min(d + 1, 31));
+  const incrementDay = () => setDay((d) => Math.min(d + 1, 30));
   const decrementDay = () => setDay((d) => Math.max(d - 1, 1));
 
   const scrollToCoolingOff = () => {
