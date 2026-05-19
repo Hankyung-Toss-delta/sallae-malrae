@@ -13,7 +13,7 @@ export default function Card({
 }
 
 export function CoolingOffCard({ item, onClick }) {
-  const { name, price, category_name, days_left, status, memo, impulse_score, image } =
+  const { name, price, category_name, days_left, time_left_label, status, memo, impulse_score, image } =
     item;
 
   return (
@@ -34,7 +34,7 @@ export function CoolingOffCard({ item, onClick }) {
               </span>
             ) : (
               <span className="bg-green-100 text-green-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                D-{days_left}
+                {time_left_label ?? `D-${days_left}`}
               </span>
             )}
           </div>
