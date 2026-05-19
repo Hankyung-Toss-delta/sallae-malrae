@@ -1,46 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import ErrorAlert from "@/components/ui/ErrorAlert";
 import { getLevelMeta } from "@/lib/level";
 
-export default function ShareView({ shareToken }) {
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/share/${shareToken}`);
-        const body = await res.json();
-        if (cancelled) return;
-
-        if (!body.success) {
-          setErrorMessage("유효하지 않거나 만료된 공유 링크예요.");
-          return;
-        }
-
-        setData(body.data);
-      } catch {
-        if (!cancelled) {
-          setErrorMessage("네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.");
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [shareToken]);
-
+export default function ShareView({ data }) {
   return (
     <div className="flex min-h-screen justify-center bg-[#F1F7F0] px-3 pt-2 pb-10 sm:px-6 sm:pt-4 sm:pb-14 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
@@ -58,15 +21,7 @@ export default function ShareView({ shareToken }) {
             </Link>
           </div>
 
-          {isLoading && <ShareSkeleton />}
-
-          {!isLoading && errorMessage && (
-            <div className="mx-auto max-w-md">
-              <ErrorAlert message={errorMessage} />
-            </div>
-          )}
-
-          {!isLoading && !errorMessage && data && <ShareContent data={data} />}
+          <ShareContent data={data} />
         </div>
       </div>
     </div>
@@ -220,23 +175,6 @@ function CTACard() {
       >
         시작하기
       </Link>
-    </div>
-  );
-}
-
-function ShareSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr]">
-      <div className="h-[480px] animate-pulse rounded-3xl bg-white/70" />
-      <div className="flex flex-col gap-4">
-        <div className="h-16 w-48 animate-pulse rounded-xl bg-white/70" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="h-28 animate-pulse rounded-2xl bg-white/70" />
-          <div className="h-28 animate-pulse rounded-2xl bg-white/70" />
-        </div>
-        <div className="h-28 animate-pulse rounded-2xl bg-white/70" />
-        <div className="h-24 animate-pulse rounded-2xl bg-white/70" />
-      </div>
     </div>
   );
 }

@@ -1,3 +1,7 @@
+import { notFound } from "next/navigation";
+
+import { getShareData } from "@/lib/share";
+
 import ShareView from "./ShareView";
 
 export async function generateMetadata({ params }) {
@@ -39,5 +43,9 @@ export async function generateMetadata({ params }) {
 
 export default async function SharePage({ params }) {
   const { shareToken } = await params;
-  return <ShareView shareToken={shareToken} />;
+
+  const data = await getShareData(shareToken);
+  if (!data) notFound();
+
+  return <ShareView data={data} />;
 }
