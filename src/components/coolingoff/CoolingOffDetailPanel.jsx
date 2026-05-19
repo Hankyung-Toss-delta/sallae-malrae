@@ -219,15 +219,20 @@ export default function CoolingOffDetailPanel({
               </div>
 
               {!isDecided && (
-                <p className="px-7 pb-2 text-sm text-center text-gray-400">
-                  {new Date(item.expire_at).toLocaleString('ko-KR', {
-                    timeZone: 'Asia/Seoul',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })} 마감
-                </p>
+                <div className="mx-7 mb-3 rounded-xl bg-[#F8F1E4] px-4 py-3">
+                  <p className="text-center text-sm text-[#7E6438]">
+                    <span className="font-semibold text-[#5C4827]">
+                      {new Date(item.expire_at).toLocaleString('ko-KR', {
+                        timeZone: 'Asia/Seoul',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        hour12: true,
+                      })}
+                    </span>
+                    까지 멈춰볼게요
+                  </p>
+                </div>
               )}
 
               {!isDecided && (
