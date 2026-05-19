@@ -12,6 +12,7 @@ export async function proxy(request) {
 
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
   const isAuthOnly = AUTH_ONLY.some((p) => pathname.startsWith(p));
+  const isRoot = pathname === '/';
 
   if (isProtected) {
     if (!token) {
@@ -33,9 +34,19 @@ export async function proxy(request) {
     }
   }
 
+  // 루트(/): 로그인 상태면 대시보드, 비로그인이면 랜딩 페이지 그대로 노출
+  if (isRoot && token) {
+    try {
+      await verifyAccessTokenEdge(token);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    } catch {
+      // 만료된 토큰이면 랜딩 페이지 그대로 진행
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/coolingoff/:path*', '/auth/login', '/auth/signup'],
+  matcher: ['/', '/dashboard/:path*', '/coolingoff/:path*', '/auth/login', '/auth/signup'],
 };
