@@ -53,11 +53,11 @@ export async function GET(request) {
       query(
         `SELECT i.id AS item_id, i.name, i.price, i.category_id, c.name AS category_name,
                 i.status, i.expire_at, i.decided_at, i.memo, i.impulse_score, i.image, i.created_at,
-                GREATEST(0, CEIL(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left,
+                GREATEST(0, FLOOR(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400)) AS days_left,
                 CASE
-                  WHEN TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) <= 86400
+                  WHEN FLOOR(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400) = 0
                     THEN 'D-day'
-                  ELSE CONCAT('D-', CEIL(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400))
+                  ELSE CONCAT('D-', FLOOR(TIMESTAMPDIFF(SECOND, NOW(), i.expire_at) / 86400))
                 END AS time_left_label
          FROM items i JOIN categories c ON i.category_id = c.id
          WHERE ${where} ${order}`,
