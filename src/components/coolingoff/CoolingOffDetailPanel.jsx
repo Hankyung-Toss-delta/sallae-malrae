@@ -28,6 +28,7 @@ export default function CoolingOffDetailPanel({
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [celebration, setCelebration] = useState(null);
   const daysLeft = item?.days_left ?? 0;
+  const timeLeftLabel = item?.time_left_label ?? 'D-day';
   const isDecided = item?.status === "passed" || item?.status === "bought";
   const onCelebrationEndRef = useRef(onCelebrationEnd);
   useEffect(() => { onCelebrationEndRef.current = onCelebrationEnd; });
@@ -150,7 +151,7 @@ export default function CoolingOffDetailPanel({
                       </span>
                     ) : (
                       <span className="bg-green-100 text-green-600 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                        D-{daysLeft}
+                        {timeLeftLabel}
                       </span>
                     )}
                     <button
@@ -216,6 +217,18 @@ export default function CoolingOffDetailPanel({
                 </div>
                 </div>
               </div>
+
+              {!isDecided && (
+                <p className="px-7 pb-2 text-sm text-center text-gray-400">
+                  {new Date(item.expire_at).toLocaleString('ko-KR', {
+                    timeZone: 'Asia/Seoul',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })} 마감
+                </p>
+              )}
 
               {!isDecided && (
                 <div className="px-7 py-5 flex gap-3 flex-shrink-0">
